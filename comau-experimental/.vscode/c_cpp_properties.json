@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/studenti/catkin_ws/devel/include/**",
+                "/opt/ros/noetic/include/**",
+                "/home/studenti/catkin_ws/src/comau_action_handlers/include/**",
+                "/home/studenti/catkin_ws/src/comau_controllers/include/**",
+                "/home/studenti/catkin_ws/src/comau_driver/include/**",
+                "/home/studenti/catkin_ws/src/comau_gripper_handler/include/**",
+                "/home/studenti/catkin_ws/src/comau_moveit_interface/include/**",
+                "/home/studenti/catkin_ws/src/comau_tcp_interface/include/**",
+                "/usr/include/**",
+                "${workspaceFolder}/comau_moveit_interface/include",
+                "/usr/include/eigen3",
+                "/usr/include/jsoncpp",
+                "${workspaceFolder}/comau_moveit_interface/include/comau_moveit_interface",
+                "/opt/ros/noetic/include",
+                "${workspaceFolder}/mira_ros_manager/include"
+            ],
+            "name": "ROS"
+        }
+    ],
+    "version": 4
+}

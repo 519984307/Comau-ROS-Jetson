@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>racer5-0-80_description</name>
+  <version>0.1.0</version>
+  <description>The racer5-0-80_description package</description>
+
+  <maintainer email="lms@lms.mech.upatras.gr">LMS</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>xacro</exec_depend>
+
+
+</package>

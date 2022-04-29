@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- Launch Action Server that send a joint trajectory to the real robot-->
+    <node pkg="comau_action_handlers" type="execute_joint_trajectory_handler_node" name="execute_joint_trajectory_handler_node" output="screen" respawn="false"/>
+
+</launch>

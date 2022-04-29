@@ -1,0 +1,28 @@
+##Description: Moves robot arm to a specified sequence of poses.
+
+#goal definition
+#Used to indicate which motion constraint to use
+int32 constraint_mode
+
+#geometry_msgs/PoseStamped is used to define the reference frame in the frameid.
+geometry_msgs/PoseStamped target_pose
+
+string planning_pipeline
+string geometric_planner
+
+string id
+bool hasPlan
+moveit_msgs/MotionPlanResponse plan
+
+float32 velocity
+float32 acceleration
+float32 timeout
+bool send_trajectory # send the calculated trajectory to execute_joint_trajectory server for real robot
+bool execute         # execute after planning or not 
+comau_msgs/ActionRequest action_request
+---
+#result definition
+comau_msgs/ActionResult action_result
+---
+#feedback
+comau_msgs/ActionFeedback action_feedback

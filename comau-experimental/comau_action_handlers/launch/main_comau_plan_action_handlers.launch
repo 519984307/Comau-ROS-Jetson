@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="ns" default="/" />
+    <group ns="$(arg ns)">
+        <!-- Choose to create a client in comau_plan_action_server.cpp for connecting to execute_joint_trajectory_handler server -->
+        <param name="create_execute_client" type="bool" value="true" />
+
+        <!-- MoveToPose Action Server -MoveIt -->
+        <include file="$(find comau_action_handlers)/launch/include/comau_plan_action_handler.launch" />
+
+        <!-- Perception Action Server -MoveIt -->
+        <include file="$(find comau_action_handlers)/launch/include/comau_perception_action_handler.launch" />
+
+        <!-- Execute trajectory server (?) -->
+        <!-- <include file="$(find comau_action_handlers)/launch/include/execute_joint_trajectory_handler.launch" /> -->
+
+        <!--Service Server to Add a Collision Object in the Planning Interface-->
+        <!-- <include file="$(find comau_moveit_interface)/launch/collision_object_handler.launch" /> -->
+
+    </group>
+</launch>

@@ -1,0 +1,15 @@
+##Description: Moves robot arm to a specified sequence of poses.
+
+#goal definition
+comau_msgs/PropertyValuePair[] joints
+float32 endEffectorVelocity
+float32 endEffectorAcceleration
+float32 timeoutSeconds #if this action cannot be completed within this time period it should be considered failed.
+bool send_trajectory # send the calculated trajectory to execute_joint_trajectory server for real robot
+comau_msgs/ActionRequest action_request
+---
+#result definition
+comau_msgs/ActionResult action_result
+---
+#feedback
+comau_msgs/ActionFeedback action_feedback

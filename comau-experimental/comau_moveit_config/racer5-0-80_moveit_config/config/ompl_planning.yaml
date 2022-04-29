@@ -1,0 +1,258 @@
+
+planner_configs:
+  AnytimePathShorteningkConfigDefault:
+    type: geometric::AnytimePathShortening
+    shortcut: true  # Attempt to shortcut all new solution paths
+    hybridize: true  # Compute hybrid solution trajectories
+    max_hybrid_paths: 24  # Number of hybrid paths generated per iteration
+    num_planners: 2  # The number of default planners to use for planning
+    planners: "RRTConnect,KPIECE"  # A comma-separated list of planner types (e.g., "PRM,EST,RRTConnect"Optionally, planner parameters can be passed to change the default:"PRM[max_nearest_neighbors=5],EST[goal_bias=.5],RRT[range=10. goal_bias=.1]"
+  SBLkConfigDefault:
+    type: geometric::SBL
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+  ESTkConfigDefault:
+    type: geometric::EST
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0 setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability. default: 0.05
+  LBKPIECEkConfigDefault:
+    type: geometric::LBKPIECE
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    border_fraction: 0.9  # Fraction of time focused on boarder default: 0.9
+    min_valid_path_fraction: 0.5  # Accept partially valid moves above fraction. default: 0.5
+  BKPIECEkConfigDefault:
+    type: geometric::BKPIECE
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    border_fraction: 0.9  # Fraction of time focused on boarder default: 0.9
+    failed_expansion_score_factor: 0.5  # When extending motion fails, scale score by factor. default: 0.5
+    min_valid_path_fraction: 0.5  # Accept partially valid moves above fraction. default: 0.5
+  KPIECEkConfigDefault:
+    type: geometric::KPIECE
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability. default: 0.05
+    border_fraction: 0.9  # Fraction of time focused on boarder default: 0.9 (0.0,1.]
+    failed_expansion_score_factor: 0.5  # When extending motion fails, scale score by factor. default: 0.5
+    min_valid_path_fraction: 0.5  # Accept partially valid moves above fraction. default: 0.5
+  RRTkConfigDefault:
+    type: geometric::RRT
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
+  RRTConnectkConfigDefault:
+    type: geometric::RRTConnect
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    longest_valid_segment_fraction: 0.0005
+  RRTstarkConfigDefault:
+    type: geometric::RRTstar
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
+    delay_collision_checking: 1  # Stop collision checking as soon as C-free parent found. default 1
+  TRRTkConfigDefault:
+    type: geometric::TRRT
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability? default: 0.05
+    max_states_failed: 10  # when to start increasing temp. default: 10
+    temp_change_factor: 2.0  # how much to increase or decrease temp. default: 2.0
+    min_temperature: 10e-10  # lower limit of temp change. default: 10e-10
+    init_temperature: 10e-6  # initial temperature. default: 10e-6
+    frountier_threshold: 0.0  # dist new state to nearest neighbor to disqualify as frontier. default: 0.0 set in setup()
+    frountierNodeRatio: 0.1  # 1/10, or 1 nonfrontier for every 10 frontier. default: 0.1
+    k_constant: 0.0  # value used to normalize expresssion. default: 0.0 set in setup()
+  PRMkConfigDefault:
+    type: geometric::PRM
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    max_nearest_neighbors: 10  # use k nearest neighbors. default: 10
+  PRMstarkConfigDefault:
+    type: geometric::PRMstar
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+  FMTkConfigDefault:
+    type: geometric::FMT
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    num_samples: 1000  # number of states that the planner should sample. default: 1000
+    radius_multiplier: 1.1  # multiplier used for the nearest neighbors search radius. default: 1.1
+    nearest_k: 1  # use Knearest strategy. default: 1
+    cache_cc: 1  # use collision checking cache. default: 1
+    heuristics: 0  # activate cost to go heuristics. default: 0
+    extended_fmt: 1  # activate the extended FMT*: adding new samples if planner does not finish successfully. default: 1
+  BFMTkConfigDefault:
+    type: geometric::BFMT
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    num_samples: 1000  # number of states that the planner should sample. default: 1000
+    radius_multiplier: 1.0  # multiplier used for the nearest neighbors search radius. default: 1.0
+    nearest_k: 1  # use the Knearest strategy. default: 1
+    balanced: 0  # exploration strategy: balanced true expands one tree every iteration. False will select the tree with lowest maximum cost to go. default: 1
+    optimality: 1  # termination strategy: optimality true finishes when the best possible path is found. Otherwise, the algorithm will finish when the first feasible path is found. default: 1
+    heuristics: 1  # activates cost to go heuristics. default: 1
+    cache_cc: 1  # use the collision checking cache. default: 1
+    extended_fmt: 1  # Activates the extended FMT*: adding new samples if planner does not finish successfully. default: 1
+  PDSTkConfigDefault:
+    type: geometric::PDST
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+  STRIDEkConfigDefault:
+    type: geometric::STRIDE
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability. default: 0.05
+    use_projected_distance: 0  # whether nearest neighbors are computed based on distances in a projection of the state rather distances in the state space itself. default: 0
+    degree: 16  # desired degree of a node in the Geometric Near-neightbor Access Tree (GNAT). default: 16
+    max_degree: 18  # max degree of a node in the GNAT. default: 12
+    min_degree: 12  # min degree of a node in the GNAT. default: 12
+    max_pts_per_leaf: 6  # max points per leaf in the GNAT. default: 6
+    estimated_dimension: 0.0  # estimated dimension of the free space. default: 0.0
+    min_valid_path_fraction: 0.2  # Accept partially valid moves above fraction. default: 0.2
+  BiTRRTkConfigDefault:
+    type: geometric::BiTRRT
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    temp_change_factor: 0.1  # how much to increase or decrease temp. default: 0.1
+    init_temperature: 100  # initial temperature. default: 100
+    frountier_threshold: 0.0  # dist new state to nearest neighbor to disqualify as frontier. default: 0.0 set in setup()
+    frountier_node_ratio: 0.1  # 1/10, or 1 nonfrontier for every 10 frontier. default: 0.1
+    cost_threshold: 1e300  # the cost threshold. Any motion cost that is not better will not be expanded. default: inf
+  LBTRRTkConfigDefault:
+    type: geometric::LBTRRT
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability. default: 0.05
+    epsilon: 0.4  # optimality approximation factor. default: 0.4
+  BiESTkConfigDefault:
+    type: geometric::BiEST
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+  ProjESTkConfigDefault:
+    type: geometric::ProjEST
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+    goal_bias: 0.05  # When close to goal select goal, with this probability. default: 0.05
+  LazyPRMkConfigDefault:
+    type: geometric::LazyPRM
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    range: 0.3  # Max motion added to tree. ==> maxDistance_ default: 0.0, if 0.0, set on setup()
+  LazyPRMstarkConfigDefault:
+    type: geometric::LazyPRMstar
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+  SPARSkConfigDefault:
+    type: geometric::SPARS
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    stretch_factor: 3.0  # roadmap spanner stretch factor. multiplicative upper bound on path quality. It does not make sense to make this parameter more than 3. default: 3.0
+    sparse_delta_fraction: 0.25  # delta fraction for connection distance. This value represents the visibility range of sparse samples. default: 0.25
+    dense_delta_fraction: 0.001  # delta fraction for interface detection. default: 0.001
+    max_failures: 1000  # maximum consecutive failure limit. default: 1000
+  SPARStwokConfigDefault:
+    type: geometric::SPARStwo
+    optimization_objective: PathLengthOptimizationObjective
+    termination_condition: CostConvergence[10,.1]
+    stretch_factor: 3.0  # roadmap spanner stretch factor. multiplicative upper bound on path quality. It does not make sense to make this parameter more than 3. default: 3.0
+    sparse_delta_fraction: 0.25  # delta fraction for connection distance. This value represents the visibility range of sparse samples. default: 0.25
+    dense_delta_fraction: 0.001  # delta fraction for interface detection. default: 0.001
+    max_failures: 5000  # maximum consecutive failure limit. default: 5000
+
+  PersistentLazyPRMstarkConfigDefault: # use this with a representative environment to create a roadmap
+    type: geometric::LazyPRMstar
+    multi_query_planning_enabled: true
+    store_planner_data: true
+    load_planner_data: false
+    planner_data_path: /tmp/roadmap.graph
+  PersistentLazyPRMkConfigDefault: # use this to load a previously created roadmap
+      type: geometric::LazyPRM
+      multi_query_planning_enabled: true
+      store_planner_data: false
+      load_planner_data: true
+      planner_data_path: /tmp/roadmap.graph
+  SemiPersistentLazyPRMstarkConfigDefault: # reuses roadmap during lifetime of node but doesn't save/load roadmap to/from disk
+      type: geometric::LazyPRMstar
+      multi_query_planning_enabled: true
+      store_planner_data: false
+      load_planner_data: false
+  SemiPersistentLazyPRMkConfigDefault: # reuses roadmap during lifetime of node but doesn't save/load roadmap to/from disk
+      type: geometric::LazyPRM
+      multi_query_planning_enabled: true
+      store_planner_data: false
+      load_planner_data: false
+  SemiPersistentPRMkConfigDefault: # reuses roadmap during lifetime of node but doesn't save/load roadmap to/from disk, DO NOT CHECK COLLISION if environment change
+      type: geometric::PRMstar
+      multi_query_planning_enabled: true
+      store_planner_data: false
+      load_planner_data: false
+
+arm:
+  enforce_joint_model_state_space: true
+  projection_evaluator: joints(joint_1,joint_2)
+  planner_configs:
+    - AnytimePathShorteningkConfigDefault
+    - SBLkConfigDefault
+    - ESTkConfigDefault
+    - LBKPIECEkConfigDefault
+    - BKPIECEkConfigDefault
+    - KPIECEkConfigDefault
+    - RRTkConfigDefault
+    - RRTConnectkConfigDefault
+    - RRTstarkConfigDefault
+    - TRRTkConfigDefault
+    - PRMkConfigDefault
+    - PRMstarkConfigDefault
+    - FMTkConfigDefault
+    - BFMTkConfigDefault
+    - PDSTkConfigDefault
+    - STRIDEkConfigDefault
+    - BiTRRTkConfigDefault
+    - LBTRRTkConfigDefault
+    - BiESTkConfigDefault
+    - ProjESTkConfigDefault
+    - LazyPRMkConfigDefault
+    - LazyPRMstarkConfigDefault
+    - SPARSkConfigDefault
+    - SPARStwokConfigDefault
+    - PersistentLazyPRMstarkConfigDefault
+    - PersistentLazyPRMkConfigDefault
+    - SemiPersistentLazyPRMstarkConfigDefault
+    - SemiPersistentLazyPRMkConfigDefault
+    - SemiPersistentPRMkConfigDefault
+  longest_valid_segment_fraction: 0.003
+  default_planner_config: KPIECEkConfigDefault
+  #default_planner_config: RRTstarkConfigDefault
+# Description of Parameters
+# -------------------------Parameters Used in all Planners------------------------------------------
+#  longest_valid_segment_fraction =the resolution at which collisions are checked  Posible values-  From 0.001 to 1 in 0.001 step
+# -------------------------Parameters Used in Tree-Based Planners------------------------------------------
+#  Range: Represents the maximum length of a motion to be added to the tree of motions. Posible values- From 0  to 10000 in 1 step
+# -------------------------Parameters Used in Tree-Based Planners which needs a proyection to work ------------------------------------------
+# projection_evaluator: Defines the orientation of the projection  A good projection in robot arms is the one formed by the shoulder and elbow joints.
+# -------------------------Parameters Used in Tree-Based Planners with just one tree------------------------------------------
+# goal_bias: The process of randomly selecting states in the state space to attempt to go towards, the algorithm may in fact choose the actual goal state, if it knows it, with some probability. This probability is a real number between 0.0 and 1.0 with a 0.01 step
+# -------------------------Parameters Used in Probabilistic Roadmap Planners PRM------------------------------------------
+# max_nearest_neighbors: represents the maximum number of nodes at which each vertex of the tree can be connected. Posible values- From 8 to 1000 in 1 step
+
+# The most likely OMPL parameter to attempt to improve this process is 'range'. 
+# If range is too small, the graph will expand too slowly (although successful plans are often smoother). 
+# If this value is too large, there may be many edges drawn between nodes that are inappropriate to the problem. 
+# In this problem, range is a measure of joint difference between two robot states, so you could conceivably calculate an appropriate range to match how you intuitively feel how closely states should be sampled.

@@ -1,0 +1,20 @@
+##Description: Perception action
+
+# Parameters
+
+string path
+float32 x
+float32 y
+float32 z
+float32 r
+float32 p
+float32 yw
+float32 res
+
+comau_msgs/ActionRequest action_request
+---
+#result definition
+comau_msgs/ActionResult action_result
+---
+#feedback
+comau_msgs/ActionFeedback action_feedback

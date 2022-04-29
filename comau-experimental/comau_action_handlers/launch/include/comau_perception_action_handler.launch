@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- TF publisher: /camera to /base_link -->
+    <arg name="x_m" default="0.365769"/>
+    <arg name="y_m" default="-0.346635"/>
+    <arg name="z_m" default="1.6903"/>
+    <arg name="roll" default="-3.002"/>  
+    <arg name="pitch" default="0.181"/> 
+    <arg name="yaw" default="-1.621"/> 
+    <!-- NB: gli angoli da halcon sono in gba (XYZ), mentre a ros serve abg (ZYX) !!!!!!!-->
+    <!-- XYZ=[r:3.315 p: 0.148 y:1.621] ///// ZYX=[r:-3.002 p: 0.181 y:-1.621]--> 
+    <arg name="resolution" default="0.01"/>
+    <node
+        pkg="tf2_ros"
+        type="static_transform_publisher" 
+        name="camera_transform_publisher"
+        args="$(arg x_m) $(arg y_m) $(arg z_m) $(arg yaw) $(arg pitch) $(arg roll) base_link camera"/>  
+  
+
+    <node pkg="comau_action_handlers" type="comau_perception_action_server_node" name="comau_perception_action_server_node" output="screen">
+        <param name="move_group" type="str" value="arm" />
+    </node>
+
+</launch>

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+
+    <rosparam file="$(find comau_gripper_handler)/config/gripper_handler.yaml" command="load"/>
+    <node pkg="comau_gripper_handler" type="comau_gripper_handler_node" name="comau_gripper_handler_node" output="screen"/>
+
+</launch>
+

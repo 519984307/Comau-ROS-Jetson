@@ -1,0 +1,18 @@
+prefix: "" 
+stl_file_name: "Screwdriver.stl" 
+x_gripper: 
+y_gripper: 
+z_gripper: 
+roll_gripper: 0.0
+pitch_gripper: 0.0
+yaw_gripper: 0.0
+parent_gripper: "link_6" 
+child_gripper: "gripper" 
+x_ee: 0.0
+y_ee: 0.0
+z_ee: 0.0
+roll_ee: 0.0
+pitch_ee: 0.0
+yaw_ee: 0.0
+parent_ee: "gripper" 
+child_ee: "ee_link"

@@ -1,0 +1,26 @@
+<launch>
+
+  <!-- This file makes it easy to include the settings for sensor managers -->
+
+  <!-- Params for 3D sensors config -->
+  <rosparam command="load" file="$(find racer5-0-80_moveit_config)/config/sensors_3d.yaml" />
+
+  <!-- Params for the octomap monitor -->
+  <param name="octomap_frame" type="string" value="camera" /> 
+  <param name="octomap_resolution" type="double" value="0.01" />
+  <!-- <param name="max_range" type="double" value="5" /> -->
+
+  <!-- Load the robot specific sensor manager; this sets the moveit_sensor_manager ROS parameter -->
+  <arg name="moveit_sensor_manager" default="racer5-0-80" />
+  <include file="$(find racer5-0-80_moveit_config)/launch/$(arg moveit_sensor_manager)_moveit_sensor_manager.launch.xml" />
+
+</launch>
+
+
+
+<!-- octomap_frame: specifies the coordinate frame in which this representation will be stored. 
+               If you are working with a mobile robot, this frame should be a fixed frame in the world.
+
+octomap_resolution: specifies the resolution at which this representation is maintained (in meters).
+
+max_range: specifies the maximum range value to be applied for any sensor input to this node. -->

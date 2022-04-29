@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="upload_gripper" pkg="racer5-0-80_description" type="racer5-0-80_upload.py" output="screen"/>
+</launch>

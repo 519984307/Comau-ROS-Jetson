@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+ 
+  <xacro:macro name="dummy_gripper" params="prefix
+                                      x_gripper y_gripper z_gripper 
+                                      roll_gripper pitch_gripper yaw_gripper 
+                                      parent_gripper child_gripper
+                                      x_ee y_ee z_ee
+                                      roll_ee pitch_ee yaw_ee
+                                      parent_ee child_ee">
+
+    <link name="${prefix}gripper">
+      <visual>
+        <geometry>
+          <cylinder length="0.001" radius="0.001"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="0.001" radius="0.001"/>
+        </geometry>
+      </collision>      
+    </link>
+
+    <joint name="${prefix}joint_gripper" type="fixed">
+      <origin xyz="${x_gripper} ${y_gripper} ${z_gripper}" rpy="${roll_gripper} ${pitch_gripper} ${yaw_gripper}" />
+      <parent link="${parent_gripper}" />
+      <child link="${child_gripper}" />
+      <axis xyz="0 0 1" />
+    </joint>
+
+    <link name="${prefix}ee_link">
+      <visual>
+        <geometry>
+          <cylinder length="0.001" radius="0.001"/>
+        </geometry>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder length="0.001" radius="0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}joint_ee_link" type="fixed">
+      <origin xyz="${x_ee} ${y_ee} ${z_ee}" rpy="${roll_ee} ${pitch_ee} ${yaw_ee}"/>
+      <parent link="${parent_ee}"/>
+      <child link="${child_ee}"/>
+      <axis xyz="0 0 1"/>
+    </joint>
+
+  </xacro:macro>
+
+</robot>

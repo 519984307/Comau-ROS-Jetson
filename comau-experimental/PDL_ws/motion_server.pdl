@@ -1,0 +1,493 @@
+PROGRAM motion_server NOHOLD, &PA,  PRIORITY = 5,STACK = 10001
+  ---------------------------------------------------------------
+  --- Author: LMS                                               
+  --- Brief: Robot motion server for handling motion commands 
+  --- over TCP/IP communication  
+  ---------------------------------------------------------------
+  
+TYPE
+  ---------------------------------------------------------------
+  --- Record: MOTION_MESSAGE_TYPE
+  --- Brief: Structure for describing the motion message. 
+  ---------------------------------------------------------------
+  MOTION_MESSAGE_TYPE = RECORD
+    id :  INTEGER                     -- Unique identifier of the message
+    message_type : STRING[1]            -- Specifier for the type of incoming msg : (T : terminate, R : reset, M : moving, X : cancel)
+    motion_type : STRING[1]             -- Valid values are represented by the predefined constants S for Sensor Tracking, X for CANCEL MOTION
+    linear_velocity : REAL              -- $LIN_SPD (in m/s)
+    trajectory_size : INTEGER           -- Shows how many points are included in trajectory. The default is 1 for performing one motion
+    joint_traj_point : ARRAY[6] OF REAL   -- The goal of each joint in degrees
+    cart_traj_point : ARRAY[6] OF REAL    -- The goal in cartesian position relative to BASE FRAME
+    sensor_tracking_correction : ARRAY[6] OF REAL        -- The cartesian correction relative to BASE FRAME
+  ENDRECORD
+	
+	
+  ---------------------------------------------------------------
+  --- Node: JOINT_NODE
+  --- Brief: Structure for describing an joint value . 
+  ---------------------------------------------------------------
+  JOINT_NODE = NODEDEF
+    $MAIN_JNTP
+    $LIN_SPD
+  ENDNODEDEF
+
+  POSE_NODE = NODEDEF
+    $MAIN_POS
+    $LIN_SPD
+  ENDNODEDEF
+
+CONST
+  ci_dv_tcp_accept = 29               -- DV_CNTRL code for port to socket connection
+  ci_dv_tcp_connect = 30              -- DV_CNTRL code to activate TCP connection (TCP go UP)
+  ci_dv_tcp_disconnect = 31           -- DV_CNTRL code to deactivate TCP connection (TCP go DOWN)
+  ci_local_port = 1105                -- TCP server "listening" port (local to the server)
+  cs_main_log = '[MOTION_SERVER] '    -- Name for main loop used in LUN_CRT 
+  ci_verbose = 1                      -- Level of logging
+  ci_receive_frequency = 100           -- The loop frequency in Hz of main server.
+  
+VAR
+  -- Shared variables
+  ss_state: STRING[1] EXPORTED FROM motion_server   -- Shared variable for showing the status (TERMINATE:T, READY:R, MOVING:M, CANCELING:C, SUCCEEDED:S, ERROR:E)
+  ss_motion_type: STRING[1] EXPORTED FROM motion_server  -- Shared variable for showing the type of motion (JOINT:J, CARTESIAN:C S:Sensor Tracking)
+  shutdown: BOOLEAN EXPORTED FROM motion_server
+
+  sp_joint_trajectory: PATH of JOINT_NODE EXPORTED FROM motion_server   -- Shared variable for the joint trajectory that will be executed 
+  sp_cartesian_trajectory: PATH of POSE_NODE EXPORTED FROM motion_server   -- Shared variable for the pose trajectory that will be executed 
+  sar_cartesian_correction : ARRAY[6] OF REAL EXPORTED FROM motion_server -- Shared variable for the sensor tracking correction
+  
+  sb_enable_robot : BOOLEAN EXPORTED FROM motion_server  -- Shared variable to show that the robot is allowed to move
+  sb_reset_motion : BOOLEAN EXPORTED FROM motion_server  -- Shared flag to cancel the motion and then reset
+  sb_terminate : BOOLEAN EXPORTED FROM motion_server     -- shared flag that will terminate all pdl programs
+  first_snstrk : BOOLEAN EXPORTED FROM motion_server
+  sem_exec : SEMAPHORE EXPORTED FROM motion_server NOSAVE 
+
+  -- Global variables
+  vs_server_host : STRING[100] NOSAVE   -- Server IP address
+  vi_server_netlun : INTEGER NOSAVE     -- TCP socket identifier
+  vs_screen_lun : INTEGER               -- Output screen identifier
+  vb_comm_success : BOOLEAN             -- Communication status flag
+  
+	t_msg : MOTION_MESSAGE_TYPE
+	prev_t_msg_id : INTEGER
+	
+	memory_vector : ARRAY[30000] OF REAL EXPORTED FROM motion_server
+	vi_conter     : INTEGER
+	vi_temp : INTEGER
+
+  -- Declaration of shared functions 
+ROUTINE tcp_server_accept(netlun, port, screenlun, verbose : INTEGER; log_tag : STRING) EXPORTED FROM pdl_tcp_functions
+ROUTINE tcp_server_disconnect(netlun, screenlun, verbose : INTEGER; log_tag : STRING) EXPORTED FROM pdl_tcp_functions
+
+ROUTINE throw_error(error_msg : STRING) EXPORTED FROM motion_server
+
+ROUTINE print_joint_trajectory(trajectory: PATH of JOINT_NODE) EXPORTED FROM motion_server
+ROUTINE print_cartesian_trajectory(trajectory: PATH of POSE_NODE) EXPORTED FROM motion_server
+ROUTINE clear_joint_trajectory EXPORTED FROM motion_server
+ROUTINE clear_cartesian_trajectory EXPORTED FROM motion_server
+
+--------------------------------------------------------------------
+--- Routine: set_RPY
+--- Brief: Convert RPY (XYZ) in euler angle (ZYZ) notation
+--------------------------------------------------------------------
+ROUTINE set_RPY(ee_pos : POSITION; sf_roll, sf_pitch, sf_yaw : REAL)
+--        __                     __
+--        |       |       |       |
+--        | sf_nx | sf_ox | sf_ax |
+--   R =  | sf_ny | sf_oy | sf_ay | = Rx(sf_roll) * Ry(sf_pitch) * Rz(sf_yaw)
+--        | sf_nz | sf_oz | sf_az |
+--        |_                     _|
+VAR
+  KR_EPSILON                : REAL
+  KR_ONEFLOAT               : REAL  
+  KR_ZEROFLOAT              : REAL
+  KR_ZERO_ONE_DEG           : REAL
+
+  sf_nx, sf_ny, sf_nz       : REAL
+  sf_ox, sf_oy, sf_oz       : REAL
+  sf_ax, sf_ay, sf_az       : REAL
+  sf_A, sf_E, sf_R          : REAL
+
+BEGIN
+  -- Constants
+  KR_EPSILON      := 0.000001; -- 10**-16;
+  KR_ONEFLOAT     := 1.0;      -- 0.999995;
+  KR_ZEROFLOAT    := 0.000001; -- 10**-16;
+  KR_ZERO_ONE_DEG := 0.001700;
+    
+  -- Compute rotational matrix
+  sf_nx := COS(sf_pitch)*COS(sf_yaw);   
+  sf_ny := COS(sf_pitch)*SIN(sf_yaw);
+  sf_nz :=           - SIN(sf_pitch);
+                            
+  sf_ox := COS(sf_yaw)*SIN(sf_pitch)*SIN(sf_roll) - COS(sf_roll)*SIN(sf_yaw);
+  sf_oy := COS(sf_roll)*COS(sf_yaw) + SIN(sf_pitch)*SIN(sf_roll)*SIN(sf_yaw);
+  sf_oz :=                               COS(sf_pitch)*SIN(sf_roll);           
+
+  sf_ax := SIN(sf_roll)*SIN(sf_yaw) + COS(sf_roll)*COS(sf_yaw)*SIN(sf_pitch);
+  sf_ay := COS(sf_roll)*SIN(sf_pitch)*SIN(sf_yaw) - COS(sf_yaw)*SIN(sf_roll);
+  sf_az :=                                        COS(sf_pitch)*COS(sf_roll);
+    
+  -- Compute RPY angles from rotational matrix
+  --     __                     __     __    R_tot = Rz(W) Ry'(P) Rz'' (R)                                   __
+  --     |       |       |       |     |                           |                         |                |
+  --     | sf_nx | sf_ox | sf_ax |     |    cW cP cR - sW sR       |  -cW cP sR - sW cR      | cW sP          |
+  --     | sf_ny | sf_oy | sf_ay |  =  |    sW cP cR + cW sR       |  -sW cP sR + cW cR      | sW sP          |
+  --     | sf_nz | sf_oz | sf_az |     |     - sP cR               |   sP sR                 | cP             |
+  --     |_                     _|     |_                          |                         |               _|
+  --
+  -- Check matrix validity
+  IF (ABS(sf_az) > KR_ONEFLOAT) THEN
+    sf_az := KR_ONEFLOAT;
+  ENDIF
+
+  -- Algorithm
+  sf_E := ACOS(sf_az);
+  IF (ABS(sf_az) > KR_ONEFLOAT) THEN
+    sf_A := KR_ZEROFLOAT;
+    IF ((ABS(sf_ny) < KR_EPSILON) AND (ABS(sf_oy) < KR_EPSILON)) THEN
+      sf_R := 0.0;
+    ELSE
+      sf_R := ATAN2(sf_ny, sf_oy);
+    ENDIF
+  ELSE
+    IF ((ABS(sf_ay) < KR_EPSILON) AND (ABS(sf_ax) < KR_EPSILON)) THEN
+      sf_A := 0.0;
+    ELSE
+      sf_A := ATAN2(sf_ay, sf_ax);
+    ENDIF
+    IF ((ABS(sf_az) > KR_ONEFLOAT) AND (ABS(sf_A) > KR_ZERO_ONE_DEG)) THEN 
+      IF (sf_az > KR_ONEFLOAT) THEN
+        sf_az := KR_ONEFLOAT;
+      ELSE 
+        IF (sf_az < -KR_ONEFLOAT) THEN
+          sf_az := KR_ONEFLOAT;
+        ENDIF
+      ENDIF
+      sf_E := ACOS(sf_az);
+      sf_A := KR_ZEROFLOAT;
+      IF ((ABS(sf_ny) < KR_EPSILON) AND (ABS(sf_oy) < KR_EPSILON)) THEN
+        sf_R := 0.0;
+      ELSE
+        sf_R := ATAN2(sf_ny, sf_oy);
+      ENDIF
+    ELSE
+      IF ((ABS(sf_oz) < KR_EPSILON) AND (ABS(sf_nz) < KR_EPSILON)) THEN
+        sf_R := 0.0;
+      ELSE
+        sf_R := ATAN2(sf_oz, -sf_nz);
+      ENDIF
+    ENDIF
+  ENDIF
+
+  -- Organize output
+  ee_pos.A := sf_A;
+  ee_pos.E := sf_E;
+  ee_pos.R := sf_R;
+
+  RETURN
+
+END set_RPY
+
+
+  --------------------------------------------------------------------
+  --- Routine: throw_error
+  --- Brief: Update the state machine of the robot
+  --------------------------------------------------------------------
+ROUTINE throw_error(error_msg : STRING)
+BEGIN
+   ss_state := 'E' --ERROR status
+   WRITE vs_screen_lun (cs_main_log, '[ERROR] : ', error_msg, NL)
+END throw_error
+
+  --------------------------------------------------------------------
+  --- Routine: append_to_joint_trajectory
+  --- Brief: Appends new point to shared PATH variable sp_joint_trajectory
+  --------------------------------------------------------------------
+ROUTINE append_to_joint_trajectory(new_joint_point: JOINTPOS; linear_vel: REAL ;trajectory_index: INTEGER; trajectory_size: INTEGER): BOOLEAN
+VAR
+  t_i : INTEGER
+BEGIN
+
+  -- Checks if index is within the max limits of the trajectory
+  IF trajectory_index > trajectory_size THEN
+    RETURN(FALSE)
+  ENDIF
+
+  NODE_APP(sp_joint_trajectory) -- Appends uninitialized nodes to the end of trajectory
+
+  sp_joint_trajectory.NODE[trajectory_index].$MAIN_JNTP := new_joint_point
+  sp_joint_trajectory.NODE[trajectory_index].$LIN_SPD := linear_vel
+
+  RETURN(TRUE)
+END append_to_joint_trajectory
+
+  --------------------------------------------------------------------
+  --- Routine: append_to_cartesian_trajectory
+  --- Brief: Appends new point to shared PATH variable sp_joint_trajectory
+  --------------------------------------------------------------------
+ROUTINE append_to_cartesian_trajectory(new_pose_point: POSITION; linear_vel: REAL ;trajectory_index: INTEGER; trajectory_size: INTEGER): BOOLEAN
+VAR
+  t_i : INTEGER
+BEGIN
+
+  -- Checks if index is within the max limits of the trajectory
+  IF trajectory_index > trajectory_size THEN
+    RETURN(FALSE)
+  ENDIF
+
+  NODE_APP(sp_cartesian_trajectory) -- Appends uninitialized nodes to the end of trajectory
+  sp_cartesian_trajectory.NODE[trajectory_index].$MAIN_POS := new_pose_point
+  sp_cartesian_trajectory.NODE[trajectory_index].$LIN_SPD := linear_vel
+
+  RETURN(TRUE)
+END append_to_cartesian_trajectory
+
+  --------------------------------------------------------------------
+  --- Routine: clear_joint_trajectory
+  --- Brief: Deletes all points from the shared PATH variable sp_joint_trajectory
+  --------------------------------------------------------------------
+ROUTINE clear_joint_trajectory
+BEGIN
+  IF PATH_LEN(sp_joint_trajectory) > 0 THEN
+    NODE_DEL(sp_joint_trajectory, 1, PATH_LEN(sp_joint_trajectory))
+  ENDIF
+END clear_joint_trajectory
+
+  --------------------------------------------------------------------
+  --- Routine: clear_cartesian_trajectory
+  --- Brief: Deletes all points from the shared PATH variable sp_joint_trajectory
+  --------------------------------------------------------------------
+ROUTINE clear_cartesian_trajectory
+BEGIN
+  IF PATH_LEN(sp_cartesian_trajectory) > 0 THEN
+    NODE_DEL(sp_cartesian_trajectory, 1, PATH_LEN(sp_cartesian_trajectory))
+  ENDIF
+END clear_cartesian_trajectory
+
+  --------------------------------------------------------------------
+  --- Routine: print_joint_trajectory
+  --- Brief: Prints all points of a PATH variable 
+  --------------------------------------------------------------------
+ROUTINE print_joint_trajectory(trajectory: PATH of JOINT_NODE)
+VAR
+  t_i: INTEGER
+BEGIN
+  WRITE vs_screen_lun (cs_main_log, 'Trajectory :', NL)
+  FOR t_i := 1 TO PATH_LEN(trajectory) DO
+    WRITE vs_screen_lun (cs_main_log, 'Joint Traj Point ', t_i ,' ', trajectory.NODE[t_i].$MAIN_JNTP, NL)
+  ENDFOR
+END print_joint_trajectory
+
+  --------------------------------------------------------------------
+  --- Routine: print_joint_trajectory
+  --- Brief: Prints all points of a PATH variable 
+  --------------------------------------------------------------------
+ROUTINE print_cartesian_trajectory(trajectory: PATH of POSE_NODE)
+VAR
+  t_i: INTEGER
+BEGIN
+  WRITE vs_screen_lun (cs_main_log, 'Trajectory :', NL)
+  FOR t_i := 1 TO PATH_LEN(trajectory) DO
+    WRITE vs_screen_lun (cs_main_log, 'Cart Traj Point ', t_i ,' ', trajectory.NODE[t_i].$MAIN_POS, NL)
+  ENDFOR
+END print_cartesian_trajectory
+
+
+  ------------------------------------------------------------------
+  --- Routine: receive_motion_message
+  --- Brief: Receiving the motion command and send it for execution 
+  ------------------------------------------------------------------
+ROUTINE receive_motion_message : BOOLEAN
+VAR
+  t_i : INTEGER
+  t_joint_pos : JOINTPOS
+  t_position : POSITION
+BEGIN
+  
+  -- 1) READ vi_server_netlun (t_msg.id::4)        -- Read the motion message unique identifier
+  -- 2) READ vi_server_netlun (t_msg.message_type::1) -- Read the message type identifier
+	--$TIMER[1] := 0
+		READ vi_server_netlun ( t_msg.id::4, t_msg.message_type::1)
+	--	vi_temp := $TIMER[1];
+	--	if(vi_conter < 30001) THEN
+	--				memory_vector[vi_conter] := vi_temp;
+	--				vi_conter := vi_conter + 1;
+	--	endiF
+  
+  SELECT t_msg.message_type OF
+    CASE('M'):  -- Motion case
+      READ vi_server_netlun (t_msg.motion_type::1) -- Read the type of motion
+      ss_motion_type := t_msg.motion_type
+      SELECT t_msg.motion_type OF  
+        CASE ('J'):-- Joint Trajectory motion case
+          IF ss_state = 'R' THEN
+            READ vi_server_netlun (t_msg.linear_velocity::4, t_msg.trajectory_size::4) 
+            -- Decode the trajectory into PATH variable
+            FOR t_i := 1 TO t_msg.trajectory_size DO
+              READ vi_server_netlun (t_msg.joint_traj_point[1]::4, t_msg.joint_traj_point[2]::4, t_msg.joint_traj_point[3]::4, t_msg.joint_traj_point[4]::4, t_msg.joint_traj_point[5]::4, t_msg.joint_traj_point[6]::4)
+              JNT(t_joint_pos, t_msg.joint_traj_point[1], t_msg.joint_traj_point[2], t_msg.joint_traj_point[3], t_msg.joint_traj_point[4], t_msg.joint_traj_point[5], t_msg.joint_traj_point[6])
+              IF append_to_joint_trajectory(t_joint_pos, t_msg.linear_velocity, t_i, t_msg.trajectory_size) = FALSE THEN
+                throw_error("Append new joint to trajectory failed")
+                RETURN(FALSE)
+              ENDIF
+            ENDFOR
+            -- Ready to execute the decoded trajectory
+            ss_state := 'M'
+            sb_enable_robot := TRUE
+          ELSE
+            WRITE vs_screen_lun (cs_main_log,"Joint Trajectory motion command rejected. Robot is already moving", NL)
+          ENDIF
+        CASE ('C'): -- Cartesian Trajectory motion case
+          IF ss_state = 'R' THEN
+            READ vi_server_netlun (t_msg.linear_velocity::4, t_msg.trajectory_size::4)
+            -- Decode the trajectory into PATH variable
+            FOR t_i := 1 TO t_msg.trajectory_size DO
+              READ vi_server_netlun (t_msg.cart_traj_point[1]::4, t_msg.cart_traj_point[2]::4, t_msg.cart_traj_point[3]::4, t_msg.cart_traj_point[4]::4, t_msg.cart_traj_point[5]::4, t_msg.cart_traj_point[6]::4)
+              t_position := POS(t_msg.cart_traj_point[1], t_msg.cart_traj_point[2], t_msg.cart_traj_point[3], t_msg.cart_traj_point[4], t_msg.cart_traj_point[5], t_msg.cart_traj_point[6])
+              set_RPY(t_position, t_msg.cart_traj_point[4], t_msg.cart_traj_point[5], t_msg.cart_traj_point[6])
+              -- POS_SET_RPY(t_position, t_msg.cart_traj_point[4], t_msg.cart_traj_point[5], t_msg.cart_traj_point[6])
+              IF append_to_cartesian_trajectory(t_position, t_msg.linear_velocity, t_i, t_msg.trajectory_size) = FALSE THEN
+                throw_error("Append new joint to trajectory failed")
+                RETURN(FALSE)
+              ENDIF
+            ENDFOR
+            -- Ready to execute the decoded trajectory
+            ss_state := 'M'
+            sb_enable_robot := TRUE
+          ELSE
+            WRITE vs_screen_lun (cs_main_log,"Cartesian Trajectory motion command rejected. Robot is already moving", NL)
+          ENDIF
+        CASE ('S'): -- Sensor Tracking motion case
+          IF (ss_state = 'R') OR (ss_state = 'M') THEN
+            -- Read the cartesian correction
+            --WAIT sem_exec   
+							 
+					IF first_snstrk = TRUE THEN
+              WRITE vs_screen_lun (cs_main_log, 'First SENSOR TRACK COMMAND', NL)
+              ss_state := 'R'
+              sb_enable_robot := TRUE
+              first_snstrk := FALSE
+              prev_t_msg_id := 0
+					ELSE
+              ss_state := 'M'
+					ENDIF
+            
+           IF t_msg.id> prev_t_msg_id THEN
+			   --
+			   -- Se è un nuovo messaggio lo decodifica e trasmette
+			   --
+ 
+								--$TIMER[1] := 0
+							 READ vi_server_netlun (t_msg.sensor_tracking_correction[1]::4,t_msg.sensor_tracking_correction[2]::4, t_msg.sensor_tracking_correction[3]::4,t_msg.sensor_tracking_correction[4]::4,t_msg.sensor_tracking_correction[5]::4, t_msg.sensor_tracking_correction[6]::4)
+											--if(vi_conter < 30001) THEN
+							        --      memory_vector[vi_conter] := $TIMER[1];
+					
+							        --    vi_conter := vi_conter + 1;
+										--	endiF
+							 FOR t_i :=1 TO 6 DO
+                   sar_cartesian_correction[t_i] := t_msg.sensor_tracking_correction[t_i]
+               ENDFOR
+               -- Sync with motion_handler
+              -- WAIT sem_exec
+               -- Start motion_handler
+							 SENSOR_SET_DATA(sar_cartesian_correction, 1)
+                --IF ($EXT_DATA_I[12] = 1) THEN 
+					         --         if(vi_conter < 30001) THEN
+							        --      memory_vector[vi_conter] := sar_cartesian_correction[3];
+					
+							           -- vi_conter := vi_conter + 1;
+				                 --else
+													--$EXT_DATA_I[12] := 0
+												 --endiF
+							--ENDIF
+               --SIGNAL sem_exec
+               -- 
+               -- Gestione codice univoco come intero su 32 bit
+               -- 
+               IF t_msg.id = 2147483647 THEN--4294967295 THEN
+									prev_t_msg_id := 0
+							ELSE 
+                 prev_t_msg_id := t_msg.id
+							ENDIF
+           ENDIF
+
+          ELSE
+            WRITE vs_screen_lun (cs_main_log,"Sensor tracking motion command rejected. Robot is in error state", NL)
+          ENDIF
+        ELSE:
+          throw_error("Wrong motion type")
+          sb_reset_motion := TRUE
+          RETURN(FALSE)
+      ENDSELECT
+    CASE('T'):  -- Terminate all server case
+      sb_terminate := TRUE
+      shutdown := TRUE
+      RETURN(TRUE)  
+    CASE('R'):  -- Reset : Cancel all motions -> reset
+      ss_motion_type := 'R'
+      sb_reset_motion := TRUE
+      RETURN(TRUE)
+    ELSE:
+      throw_error("Wrong message type")
+      sb_reset_motion := TRUE
+      RETURN(FALSE)
+  ENDSELECT
+  RETURN(TRUE)
+END receive_motion_message
+
+
+  ------------------
+  ---- MAIN LOOP 
+  ------------------
+BEGIN
+  vb_comm_success := TRUE       -- init communication status flag
+  vs_server_host := $NET_L[1]   -- get IP from controller settings
+  vs_screen_lun := LUN_CRT      -- define output 
+	
+	vi_conter := 1;
+	vi_temp := 0;
+
+  WRITE vs_screen_lun (NL, "------", NL, 'Robot Motion Server starting... ', NL)
+  
+  -- opens the socket 
+  OPEN FILE vi_server_netlun ('NETT:', 'rw'),
+    WITH $FL_BINARY = TRUE,
+  ENDOPEN
+  
+  -- Initialize semaphore
+  CANCEL sem_exec
+  SIGNAL sem_exec
+
+  IF VAR_UNINIT(shutdown) THEN
+    WRITE LUN_CRT (cs_main_log, 'Initialize shutdown to FALSE', NL)
+    shutdown := FALSE -- FALSE
+  ENDIF
+  first_snstrk := TRUE
+  REPEAT
+    
+    WRITE vs_screen_lun (cs_main_log, "Server Address : ", vs_server_host, NL)
+    WRITE vs_screen_lun (cs_main_log, "Server Port    :", ci_local_port, NL)
+    WRITE vs_screen_lun (cs_main_log, "Waiting for connections...", NL)
+
+    ss_state := 'R' -- READY state
+		
+		tcp_server_accept((vi_server_netlun), ci_local_port, vs_screen_lun, ci_verbose, cs_main_log)
+    
+    WRITE vs_screen_lun (cs_main_log, "Starting cycle...", NL)
+    
+     
+    WHILE ss_state <> 'T' DO
+
+      vb_comm_success := receive_motion_message
+		
+    ENDWHILE -- Terminate while
+
+    WRITE vs_screen_lun (cs_main_log, "Connection closed.", NL)
+
+    DELAY 500
+  
+  UNTIL shutdown   -- Main loop
+
+  CLOSE FILE vi_server_netlun
+  
+END motion_server

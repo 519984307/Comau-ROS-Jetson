@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="racer5-0-80">
+
+  <!-- 
+    Author: LMS
+   -->
+   
+  <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
+  <xacro:arg name="load_gripper" default="false"/>
+
+  <!-- common stuff -->
+  <xacro:include filename="$(find racer5-0-80_description)/urdf/common.gazebo.xacro" />
+
+  <!--load racer5-0-80 -->
+  <xacro:include filename="$(find racer5-0-80_description)/urdf/racer5-0-80/racer5-0-80.urdf.xacro" />
+
+  <!-- arm -->
+  <xacro:racer5-0-80_robot prefix="" transmission_hw_interface="$(arg transmission_hw_interface)"/>
+  <xacro:arg name="gripper_yaml_file" default="gripper.yaml"/>
+
+  <!-- load gripper -->
+
+  <xacro:if value="$(arg load_gripper)">
+    <xacro:include filename="$(find racer5-0-80_description)/urdf/gripper.xacro" />
+
+    <!-- <xacro:property name="yaml_file" value="$(find racer5-0-80_description)/config/$(arg gripper_yaml_file)" /> -->
+    <xacro:property name="yaml_file" value="$(arg gripper_yaml_file)" />
+    <xacro:property name="gripper" value="${load_yaml(yaml_file)}"/>
+
+    <xacro:property name="prefix" value="${gripper['prefix']}" />
+    <xacro:property name="stl_file_name" value="${gripper['stl_file_name']}" />
+    <xacro:property name="x_gripper" value="${gripper['x_gripper']}" />
+    <xacro:property name="y_gripper" value="${gripper['y_gripper']}" />
+    <xacro:property name="z_gripper" value="${gripper['z_gripper']}" />
+    <xacro:property name="roll_gripper" value="${gripper['roll_gripper']}" />
+    <xacro:property name="pitch_gripper" value="${gripper['pitch_gripper']}" />
+    <xacro:property name="yaw_gripper" value="${gripper['yaw_gripper']}" />
+    <xacro:property name="child_gripper" value="${gripper['child_gripper']}" />
+    <xacro:property name="parent_gripper" value="${gripper['parent_gripper']}" />
+    <xacro:property name="x_ee" value="${gripper['x_ee']}" />
+    <xacro:property name="y_ee" value="${gripper['y_ee']}" />
+    <xacro:property name="z_ee" value="${gripper['z_ee']}" />
+    <xacro:property name="roll_ee" value="${gripper['roll_ee']}" />
+    <xacro:property name="pitch_ee" value="${gripper['pitch_ee']}" />
+    <xacro:property name="yaw_ee" value="${gripper['yaw_ee']}" />
+    <xacro:property name="child_ee" value="${gripper['child_ee']}" />
+    <xacro:property name="parent_ee" value="${gripper['parent_ee']}" />
+
+    <xacro:gripper prefix="" stl_file_name="${stl_file_name}"
+                  
+                  x_gripper="${x_gripper}" y_gripper="${y_gripper}" z_gripper="${z_gripper}"
+                  roll_gripper="${roll_gripper}" pitch_gripper="${pitch_gripper}" yaw_gripper="${yaw_gripper}"
+                  parent_gripper="${parent_gripper}" child_gripper="${child_gripper}"
+                  x_ee="${x_ee}" y_ee="${y_ee}" z_ee="${z_ee}"
+                  roll_ee="${roll_ee}" pitch_ee="${pitch_ee}" yaw_ee="${yaw_ee}"
+                  parent_ee="${parent_ee}" child_ee="${child_ee}"
+                  />
+  </xacro:if>
+
+  <xacro:unless value="$(arg load_gripper)">
+    <xacro:include filename="$(find racer5-0-80_description)/urdf/dummy_gripper.xacro" />
+
+    <xacro:property name="yaml_file" value="$(find racer5-0-80_description)/config/dummy_gripper.yaml" />
+    <xacro:property name="gripper" value="${load_yaml(yaml_file)}"/>
+
+    <xacro:property name="prefix" value="${gripper['prefix']}" />
+    <xacro:property name="x_gripper" value="${gripper['x_gripper']}" />
+    <xacro:property name="y_gripper" value="${gripper['y_gripper']}" />
+    <xacro:property name="z_gripper" value="${gripper['z_gripper']}" />
+    <xacro:property name="roll_gripper" value="${gripper['roll_gripper']}" />
+    <xacro:property name="pitch_gripper" value="${gripper['pitch_gripper']}" />
+    <xacro:property name="yaw_gripper" value="${gripper['yaw_gripper']}" />
+    <xacro:property name="child_gripper" value="${gripper['child_gripper']}" />
+    <xacro:property name="parent_gripper" value="${gripper['parent_gripper']}" />
+    <xacro:property name="x_ee" value="${gripper['x_ee']}" />
+    <xacro:property name="y_ee" value="${gripper['y_ee']}" />
+    <xacro:property name="z_ee" value="${gripper['z_ee']}" />
+    <xacro:property name="roll_ee" value="${gripper['roll_ee']}" />
+    <xacro:property name="pitch_ee" value="${gripper['pitch_ee']}" />
+    <xacro:property name="yaw_ee" value="${gripper['yaw_ee']}" />
+    <xacro:property name="child_ee" value="${gripper['child_ee']}" />
+    <xacro:property name="parent_ee" value="${gripper['parent_ee']}" />
+
+    <xacro:dummy_gripper prefix=""
+    
+                  x_gripper="${x_gripper}" y_gripper="${y_gripper}" z_gripper="${z_gripper}"
+                  roll_gripper="${roll_gripper}" pitch_gripper="${pitch_gripper}" yaw_gripper="${yaw_gripper}"
+                  parent_gripper="${parent_gripper}" child_gripper="${child_gripper}"
+                  x_ee="${x_ee}" y_ee="${y_ee}" z_ee="${z_ee}"
+                  roll_ee="${roll_ee}" pitch_ee="${pitch_ee}" yaw_ee="${yaw_ee}"
+                  parent_ee="${parent_ee}" child_ee="${child_ee}"
+                  />    
+  </xacro:unless>
+
+
+  <!-- World Joint Position -->
+  <xacro:arg name="pos_x" default="0"/>
+  <xacro:arg name="pos_y" default="0"/>
+  <xacro:arg name="pos_z" default="0"/>
+  <xacro:arg name="roll" default="0"/>
+  <xacro:arg name="pitch" default="0"/>
+  <xacro:arg name="yaw" default="0"/>
+
+  <link name="world" />
+
+  <joint name="world_joint" type="fixed">
+    <parent link="world" />
+    <child link = "base_link" />
+    <origin xyz="$(arg pos_x) $(arg pos_y) $(arg pos_z)" rpy="$(arg roll) $(arg pitch) $(arg yaw)" />
+  </joint>
+
+</robot>

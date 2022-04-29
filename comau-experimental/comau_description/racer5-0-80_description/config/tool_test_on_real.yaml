@@ -1,0 +1,20 @@
+prefix: "" 
+stl_file_name: "welder.stl" 
+x_gripper: 0
+y_gripper: 0
+z_gripper: 0.01
+roll_gripper: 0
+pitch_gripper: 0
+yaw_gripper: 0
+parent_gripper: "link_6" 
+child_gripper: "gripper" 
+x_ee: -0.05269
+y_ee: 0.005634
+z_ee: 0.180633
+roll_ee: 0
+pitch_ee: 3.14
+yaw_ee: 0
+parent_ee: "gripper" 
+child_ee: "ee_link"
+
+#tool[60]

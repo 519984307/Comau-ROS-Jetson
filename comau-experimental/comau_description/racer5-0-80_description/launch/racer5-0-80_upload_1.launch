@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<launch>
+
+  <param name="robot/name" type="str" value="racer5-0-80" />
+<!-- Robot position -->
+  <arg name="pos_x" default="0.0"/>
+  <arg name="pos_y" default="0.0"/>
+  <arg name="pos_z" default="0.0"/>
+  <arg name="roll" default="0.0"/>
+  <arg name="pitch" default="0.0"/>
+  <arg name="yaw" default="0.0"/>
+
+<!-- Gripper params -->
+  <arg name="load_gripper" default="false"/>
+  <arg name="gripper_yaml_file" default="gripper.yaml"/>
+  <arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface" />
+
+  <param name="robot_description" command="$(find xacro)/xacro '$(find racer5-0-80_description)/robots/racer5-0-80_robot.urdf.xacro' 
+                                          pos_x:=$(arg pos_x) pos_y:=$(arg pos_y) pos_z:=$(arg pos_z) 
+                                          roll:=$(arg roll) pitch:=$(arg pitch) yaw:=$(arg yaw) 
+                                          transmission_hw_interface:=$(arg transmission_hw_interface)
+                                          load_gripper:=$(arg load_gripper)
+                                          gripper_yaml_file:=$(arg gripper_yaml_file)"/>
+</launch>

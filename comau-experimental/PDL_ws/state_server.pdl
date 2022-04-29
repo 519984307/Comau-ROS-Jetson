@@ -1,0 +1,369 @@
+ PROGRAM state_server NOHOLD, &PA, STACK = 10000
+  ---------------------------------------------------------------
+  --- Author: LMS                                               
+  --- Brief: Robot state server publishes the information of robot 
+  --- state over TCP/IP communication  
+  ---------------------------------------------------------------
+  
+TYPE
+  ---------------------------------------------------------------
+  --- Record: STATE_MESSAGE_TYPE
+  --- Brief: Structure for describing the state message. 
+  ---------------------------------------------------------------
+  STATE_MESSAGE_TYPE = RECORD
+    timestamp      : INTEGER                   -- UNIX Timestamp as returned from CLOCK Built-In Function (11.41 pdl manual)
+    robot_status   : STRING[1]             -- Current status of the robot (TERMINATE:T, READY:R, MOVING:M, CANCELING:C, SUCCEEDED:S, ERROR:E)
+    joint_position : ARRAY[6] OF REAL     -- The value of each joint in degrees as returned from ARM_JNTP function
+    ee_position    : ARRAY[6] OF REAL        -- The value of the End Effector Position as an array
+    -- TODO add more attributes at state msg 
+  ENDRECORD
+  
+CONST
+  ci_dv_tcp_accept     = 29                -- DV_CNTRL code for port to socket connection
+  ci_dv_tcp_connect    = 30                -- DV_CNTRL code to activate TCP connection (TCP go UP)
+  ci_dv_tcp_disconnect = 31                -- DV_CNTRL code to deactivate TCP connection (TCP go DOWN)
+  ci_local_port        = 1104              -- TCP server "listening" port (local to the server)
+  cs_main_log          = '[STATE_SERVER] ' -- Name for main loop used in LUN_CRT 
+  ci_verbose           = 1                 -- Level of logging
+  ci_status_msg_type   = 0x1               -- Status message type
+  ci_publish_frequency = 1 --25               -- The frequency in Hz that will publish the state message. 25 Hz is ideal for real robot communication.
+VAR
+  -- Shared variables
+  ss_state:  STRING[1] EXPORTED FROM motion_server        -- Shared variable for showing the status (TERMINATE:T, READY:R, MOVING:M, SUCCEEDED:S, ERROR:E)
+  shutdown: BOOLEAN EXPORTED FROM motion_server
+  -- Global variables 
+  vs_server_host : STRING[100] NOSAVE                   -- Server IP address
+  vi_server_netlun : INTEGER NOSAVE                     -- TCP socket identifier
+  vs_screen_lun : INTEGER                               -- Output screen identifier
+  vb_comm_success : BOOLEAN                             -- Communication status flag
+  state_message : STATE_MESSAGE_TYPE                    -- The state message that will be published
+
+  -- Declaration of shared functions 
+ROUTINE tcp_server_accept(netlun, port, screenlun, verbose : INTEGER; log_tag : STRING) EXPORTED FROM pdl_tcp_functions
+ROUTINE tcp_server_disconnect(netlun, screenlun, verbose : INTEGER; log_tag : STRING) EXPORTED FROM pdl_tcp_functions
+
+  --------------------------------------------------------------------
+  --- Routine: throw_error
+  --- Brief: Update the state machine of the robot
+  --------------------------------------------------------------------
+ROUTINE throw_error(error_msg : STRING)
+BEGIN
+   ss_state := 'E' --ERROR
+   WRITE vs_screen_lun (cs_main_log, '[ERROR] : ', error_msg, NL)
+END throw_error
+
+ROUTINE get_RPY(ee_pos : POSITION) : POSITION
+--        __                     __
+--        |       |       |       |
+--        | sf_nx | sf_ox | sf_ax |
+--   R =  | sf_ny | sf_oy | sf_ay | = Rz(A) * Ry(E) * Rz(R)
+--        | sf_nz | sf_oz | sf_az |
+--        |_                     _|
+VAR
+  KR_EPSILON                : REAL
+  sf_nx, sf_ny, sf_nz       : REAL
+  sf_ox, sf_oy, sf_oz       : REAL
+  sf_ax, sf_ay, sf_az       : REAL
+  sf_A, sf_E, sf_R          : REAL
+  ee_pos_rpy                : POSITION
+  sf_roll, sf_pitch, sf_yaw : REAL
+  sf_tmp_y, sf_tmp_x        : REAL
+BEGIN
+  KR_EPSILON   := 0.001;
+	
+  ee_pos_rpy.x := ee_pos.x;
+  ee_pos_rpy.y := ee_pos.y;
+  ee_pos_rpy.z := ee_pos.z;
+
+  sf_A := ee_pos.A;
+  sf_E := ee_pos.E;
+  sf_R := ee_pos.R;
+	
+  -- Compute rotational matrix
+  sf_nx := COS(sf_A)*COS(sf_E)*COS(sf_R) - SIN(sf_A)*SIN(sf_R); 	
+  sf_ny := COS(sf_A)*SIN(sf_R) + COS(sf_E)*COS(sf_R)*SIN(sf_A);
+  sf_nz :=                               - COS(sf_R)*SIN(sf_E);
+                            
+  sf_ox := -COS(sf_R)*SIN(sf_A)-COS(sf_A)*COS(sf_E)*SIN(sf_R);
+  sf_oy := COS(sf_A)*COS(sf_R)-COS(sf_E)*SIN(sf_A)*SIN(sf_R);
+  sf_oz := SIN(sf_E)*SIN(sf_R);           
+
+  sf_ax := COS(sf_A)*SIN(sf_E);
+  sf_ay := SIN(sf_A)*SIN(sf_E);
+  sf_az := COS(sf_E);
+
+  -- Compute RPY angles from rotational matrix (XYZ notation)
+  sf_tmp_y := sf_oz;
+  sf_tmp_x := sf_az;
+  IF ((ABS(sf_tmp_y) < KR_EPSILON) AND (ABS(sf_tmp_x) < KR_EPSILON)) THEN
+    sf_roll  := 0.0;
+  ELSE
+    sf_roll := ATAN2(sf_tmp_y, sf_tmp_x);
+  ENDIF
+	
+  sf_tmp_y := -sf_nz;
+  sf_tmp_x := SIN(sf_roll)*sf_oz + COS(sf_roll)*sf_az;
+  IF ((ABS(sf_tmp_y) < KR_EPSILON) AND (ABS(sf_tmp_x) < KR_EPSILON)) THEN
+    sf_pitch  := 0.0;
+  ELSE
+    sf_pitch := ATAN2(sf_tmp_y,sf_tmp_x);
+  ENDIF
+	
+  sf_tmp_y := -COS(sf_roll)*sf_ox + SIN(sf_roll)*sf_ax;
+  sf_tmp_x :=  COS(sf_roll)*sf_oy - SIN(sf_roll)*sf_ay;
+  IF ((ABS(sf_tmp_y) < KR_EPSILON) AND (ABS(sf_tmp_x) < KR_EPSILON)) THEN
+    sf_yaw  := 0.0;
+  ELSE
+    sf_yaw  := ATAN2(sf_tmp_y,sf_tmp_x);
+  ENDIF
+  
+  ee_pos_rpy.A := sf_roll;
+  ee_pos_rpy.E := sf_pitch;
+  ee_pos_rpy.R := sf_yaw;
+
+  RETURN(ee_pos_rpy)
+
+END get_RPY
+
+--
+-- ===================================================================================
+--
+-- +-------------------------------------------------------------------------------+
+-- |ROUTINE   : rr_ARM_rPOS                                                        |
+-- |Purpose   : restituisce la posizione REALE                                     |
+-- +-------------------------------------------------------------------------------+
+ROUTINE rr_ARM_rPOS( ab_low_resolution : BOOLEAN ) : POSITION
+VAR
+  nx,ny,nz :REAL
+  ox,oy,oz :REAL
+  ax,ay,az :REAL
+  cr,sr    :REAL
+  rpy : ARRAY[3] OF REAL
+  lp_pos_real : POSITION
+  lp_pos_target : POSITION
+
+BEGIN
+  --
+  -- L'esecuzione di questo codice richiede circa 23 microsecondi
+  --
+  -- ****************************************************************
+  -- * Serve per forzare il calcolo della quota reale in cartesiano *
+  -- ****************************************************************
+  --
+  BIT_SET($A_ALONG_1D[1], 4)
+  --
+  -- ****************************************************************
+  -- * BASSA RISOLUZIONE / maggior affidabilità e robustezza nella  *
+  -- * rappresentazione degli ANGOLI DI EULERO                      *
+  -- ****************************************************************
+  --
+  IF ab_low_resolution THEN
+     $CNTRL_INIT := $CNTRL_INIT OR 0x400000
+  ELSE
+     $CNTRL_INIT := $CNTRL_INIT XOR 0x400000
+  ENDIF
+
+  lp_pos_real   := POS(0, 0, 0, 0, 0, 0, '')
+  lp_pos_real.X := $CRNT_DATA[1].C_AREAL_1D[19]
+  lp_pos_real.Y := $CRNT_DATA[1].C_AREAL_1D[20]
+  lp_pos_real.Z := $CRNT_DATA[1].C_AREAL_1D[21]
+  --
+  -- ******************************************************************
+  -- * Elementi di rotazione della matrice di trasformazione omogenea *
+  -- ******************************************************************
+  --
+  --
+  -- da slide Bona http://www.ladispe.polito.it/corsi/meccatronica/02JHCOR/2011-12/Slides/Rotazioni.pdf
+  -- __                     __     __                                                                   __
+  -- |       |       |       |     |                           |                         |                |
+  -- | sf_nx | sf_ox | sf_ax |     |       cRy cRz             |  - cRy sRz              |       sRy      |
+  -- | sf_ny | sf_oy | sf_ay |  =  |    sRx sRy cRz + cRx sRz  |  -sRx sRy sRz + cRx cRz |    -sRx cRy    |
+  -- | sf_nz | sf_oz | sf_az |     |   -cRx sRy cRz + sRx sRz  |   cRx sRy sRz + sRx cRz |     cRx cRy    |
+  -- |_                     _|     |_                          |                         |               _|
+  --
+  nx   := $CRNT_DATA[1].C_AREAL_1D[22]
+  ox   := $CRNT_DATA[1].C_AREAL_1D[23]
+  ax   := $CRNT_DATA[1].C_AREAL_1D[24]
+--ny   := $CRNT_DATA[1].C_AREAL_1D[25]
+--oy   := $CRNT_DATA[1].C_AREAL_1D[26]
+  ay   := $CRNT_DATA[1].C_AREAL_1D[27]
+--nz   := $CRNT_DATA[1].C_AREAL_1D[28]
+--oz   := $CRNT_DATA[1].C_AREAL_1D[29]
+  az   := $CRNT_DATA[1].C_AREAL_1D[30]
+  --
+  rpy[1] := atan2(-ay, az)                  -- roll
+  -- compute sin/cos of roll angle
+  sr     := sin(rpy[1])
+  cr     := cos(rpy[1])
+  rpy[2] := atan2( ax, cr * az - sr * ay ); -- pitch
+  rpy[3] := atan2( -ox, nx );               -- yaw
+  --
+  -- ****************************************************************
+  -- * Mappo R, P, Y negli angoli di Eulero A, E, R                 *
+  -- ****************************************************************
+  --
+  lp_pos_real.A := rpy[1]
+  lp_pos_real.E := rpy[2]
+  lp_pos_real.R := rpy[3]
+  --
+  -- Restituisco al chiamante
+  --
+  RETURN( lp_pos_real )
+  --
+END rr_ARM_rPOS
+
+  ---------------------------------------------------------------
+  --- Routine: publish_state_message
+  --- Brief: Collects and sends the status information 
+  ---------------------------------------------------------------
+ROUTINE publish_state_message : BOOLEAN
+VAR
+  t_jntp : JOINTPOS
+  t_i    : INTEGER
+  ee_pos : POSITION
+  roll   : REAL
+  pitch  : REAL
+  yaw    : REAL
+	
+  ee_pos_rpy : POSITION
+	
+BEGIN
+
+  state_message.timestamp := CLOCK
+  state_message.robot_status := ss_state
+	
+	for t_i :=1 TO 6 do
+			IF t_i <=4 THEN
+						t_jntp[t_i] := $CRNT_DATA[1].RAD_IDL_QUO[t_i]
+			endif
+			if t_i = 5 THEN
+					t_jntp[t_i]  :=	( $ARM_DATA[1].AX_INF[4]*t_jntp[4] + $CRNT_DATA[1].RAD_IDL_QUO[5])
+			endif
+			if t_i = 6 THEN
+					t_jntp[t_i]  := ( $ARM_DATA[1].AX_INF[5]*t_jntp[4] + $ARM_DATA[1].AX_INF[6]* t_jntp[5] + $CRNT_DATA[1].RAD_IDL_QUO[6])
+			endif
+	endfor
+  --t_jntp := ARM_JNTP
+  FOR t_i := 1 TO 6 DO
+	--state_message.joint_position[t_i] := t_jntp[t_i]
+    state_message.joint_position[t_i] := t_jntp[t_i]* 57.29578
+  ENDFOR
+  --JNTP_TO_POS(t_jntp, ee_pos)
+	
+	ee_pos := rr_ARM_rPOS(false)
+	
+  --ee_pos_rpy := get_RPY(ee_pos);
+  --roll  := ee_pos_rpy.A;
+  --pitch := ee_pos_rpy.E;
+  --yaw   := ee_pos_rpy.R;
+	
+  -- POS_GET_RPY(ee_pos, roll, pitch, yaw)
+  state_message.ee_position[1] := ee_pos.x
+  state_message.ee_position[2] := ee_pos.y
+  state_message.ee_position[3] := ee_pos.z
+  state_message.ee_position[4] := ee_pos.A
+  state_message.ee_position[5] := ee_pos.E
+  state_message.ee_position[6] := ee_pos.R
+	--state_message.ee_position[4] := roll
+  --state_message.ee_position[5] := pitch
+  --state_message.ee_position[6] := yaw
+  
+  WRITE vi_server_netlun (state_message.timestamp, state_message.robot_status, state_message.joint_position[1], state_message.joint_position[2], state_message.joint_position[3], state_message.joint_position[4], state_message.joint_position[5], state_message.joint_position[6], state_message.ee_position[1], state_message.ee_position[2], state_message.ee_position[3], state_message.ee_position[4], state_message.ee_position[5], state_message.ee_position[6])
+  
+  RETURN(TRUE)
+
+END publish_state_message
+  
+  ---------------------------------------------------------------
+  --- Routine: client_disconnects_handling
+  --- Brief: This routine called when the client disconnects 
+  --- FIXME Currently not used
+  ---------------------------------------------------------------
+ROUTINE client_disconnects_handling
+BEGIN
+  IF ci_verbose = 1 THEN
+    WRITE vs_screen_lun (cs_main_log, 'Client disconnected')
+  ENDIF
+END client_disconnects_handling
+  
+--ROUTINE reset_connection
+--BEGIN
+--  IF ci_verbose = 1 THEN
+--    WRITE vs_screen_lun (cs_main_log, 'State Server RESETTING')
+--  ENDIF
+--  CLOSE FILE vi_server_netlun
+--  DELAY 10
+--  -- opens the socket 
+--  OPEN FILE vi_server_netlun ('NETT:', 'rw'),
+--    WITH $FL_BINARY = TRUE,
+--  ENDOPEN
+--  tcp_server_accept((vi_server_netlun), ci_local_port, vs_screen_lun, ci_verbose, cs_main_log)
+--  EXIT CYCLE 
+--END reset_connection
+
+  ------------------
+  ---- MAIN LOOP 
+  ------------------
+BEGIN
+  
+  vb_comm_success := TRUE   -- init communication status flag
+  vs_server_host := $NET_L[1]   -- get IP from controller settings
+  vs_screen_lun := LUN_CRT   -- define output 
+  
+  WRITE vs_screen_lun (NL, "------" , NL, 'Robot State Server starting... ', NL)
+  
+  -- opens the socket 
+  OPEN FILE vi_server_netlun ('NETT:', 'rw'),
+    WITH $FL_BINARY = TRUE,
+  ENDOPEN
+
+  --CONDITION[1]:
+  --  WHEN ANYERROR DO
+  --    reset_connection
+  --ENDCONDITION
+  --ENABLE CONDITION[1]
+  
+  $BASE := POS(0.0,0.0,0.0,0.0,0.0,0.0,'')
+  $UFRAME := POS(0.0,0.0,0.0,0.0,0.0,0.0,'')
+  $TOOL := POS(0.0,0.0,0.0,0.0,0.0,0.0,'')
+
+  IF VAR_UNINIT(ss_state) THEN
+    WRITE LUN_CRT (cs_main_log, 'Initialize shared variable ss_status to READY', NL)
+    ss_state := 'R' -- READY
+  ENDIF
+  IF VAR_UNINIT(shutdown) THEN
+    WRITE LUN_CRT (cs_main_log, 'Initialize shutdown to FALSE', NL)
+    shutdown := FALSE -- FALSE
+  ENDIF
+
+  REPEAT
+  
+    WRITE vs_screen_lun (cs_main_log, 'Server Address : ', vs_server_host, NL)
+    WRITE vs_screen_lun (cs_main_log, 'Server Port    :', ci_local_port, NL)
+    
+    WRITE vs_screen_lun (cs_main_log, 'Waiting for connections...', NL)
+    tcp_server_accept((vi_server_netlun), ci_local_port, vs_screen_lun, ci_verbose, cs_main_log)
+    
+    WRITE vs_screen_lun (cs_main_log, 'Starting cycle...', NL)
+
+    
+    -- Publish state message loop stops when a client send terminate message and the status goes 'T' 
+    WHILE ss_state <> 'T' DO
+      vb_comm_success := publish_state_message
+      --IF vb_comm_success = FALSE THEN
+      --   throw_error("Publish state message failed")
+      --ENDIF
+      
+      DELAY ROUND((1 / ci_publish_frequency ) * 1000)
+
+    ENDWHILE  -- Terminate while
+
+    WRITE vs_screen_lun (cs_main_log, 'Connection closed.', NL)
+    DELAY 500
+    WRITE vs_screen_lun (NL, cs_main_log, 'Restarting Robot State Server ... ', NL)
+
+  UNTIL shutdown -- Main loop
+  
+  CLOSE FILE vi_server_netlun
+    
+END state_server

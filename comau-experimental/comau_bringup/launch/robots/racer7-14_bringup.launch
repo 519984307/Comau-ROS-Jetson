@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="ns" default="/" />
+  <group ns="$(arg ns)">
+    <arg name="robot_description_file" default="$(find racer7-14_description)/launch/racer7-14_upload.launch" doc="Robot description launch file."/>
+    <arg name="robot_net_config_file" default="roboshop_net_config"  doc="Network configuration for Roboshop simulation program" />
+    
+    <include file="$(find comau_bringup)/launch/common/comau_common.launch">
+      <arg name="robot_description_file" value="$(arg robot_description_file)"/>
+      <arg name="robot_net_config_file" value="$(arg robot_net_config_file)"/>
+    </include>
+  </group>
+</launch>

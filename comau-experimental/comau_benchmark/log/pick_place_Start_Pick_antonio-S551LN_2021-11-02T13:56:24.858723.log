@@ -1,0 +1,911 @@
+MoveIt version 1.1.6-Alpha
+Experiment Start_Pick
+Running on antonio-S551LN
+Starting at 2021-11-02T13:56:24.858723
+<<<|
+Motion plan request:
+workspace_parameters: 
+  header: 
+    seq: 0
+    stamp: 0.000000000
+    frame_id: 
+  min_corner: 
+    x: -1
+    y: -1
+    z: -1
+  max_corner: 
+    x: 1
+    y: 1
+    z: 1
+start_state: 
+  joint_state: 
+    header: 
+      seq: 0
+      stamp: 0.000000000
+      frame_id: world
+    name[]
+      name[0]: joint_1
+      name[1]: joint_2
+      name[2]: joint_3
+      name[3]: joint_4
+      name[4]: joint_5
+      name[5]: joint_6
+    position[]
+      position[0]: 0.54853
+      position[1]: 1.03974
+      position[2]: -1.2212
+      position[3]: 0.0118922
+      position[4]: 0.895853
+      position[5]: 38.2401
+    velocity[]
+    effort[]
+  multi_dof_joint_state: 
+    header: 
+      seq: 0
+      stamp: 0.000000000
+      frame_id: world
+    joint_names[]
+    transforms[]
+    twist[]
+    wrench[]
+  attached_collision_objects[]
+  is_diff: 0
+goal_constraints[]
+  goal_constraints[0]: 
+    name: 
+    joint_constraints[]
+      joint_constraints[0]: 
+            joint_name: joint_1
+        position: -0.665111
+        tolerance_above: 2.22045e-16
+        tolerance_below: 2.22045e-16
+        weight: 1
+      joint_constraints[1]: 
+            joint_name: joint_2
+        position: 0.888517
+        tolerance_above: 2.22045e-16
+        tolerance_below: 2.22045e-16
+        weight: 1
+      joint_constraints[2]: 
+            joint_name: joint_3
+        position: -1.85929
+        tolerance_above: 2.22045e-16
+        tolerance_below: 2.22045e-16
+        weight: 1
+      joint_constraints[3]: 
+            joint_name: joint_4
+        position: 0.0114917
+        tolerance_above: 2.22045e-16
+        tolerance_below: 2.22045e-16
+        weight: 1
+      joint_constraints[4]: 
+            joint_name: joint_5
+        position: 0.359907
+        tolerance_above: 2.22045e-16
+        tolerance_below: 2.22045e-16
+        weight: 1
+      joint_constraints[5]: 
+            joint_name: joint_6
+        position: -43.3263
+        tolerance_above: 2.22045e-16
+        tolerance_below: 2.22045e-16
+        weight: 1
+    position_constraints[]
+    orientation_constraints[]
+    visibility_constraints[]
+path_constraints: 
+  name: 
+  joint_constraints[]
+  position_constraints[]
+  orientation_constraints[]
+  visibility_constraints[]
+trajectory_constraints: 
+  constraints[]
+reference_trajectories[]
+pipeline_id: 
+planner_id: 
+group_name: arm
+num_planning_attempts: 1
+allowed_planning_time: 10
+max_velocity_scaling_factor: 0.1
+max_acceleration_scaling_factor: 0.1
+cartesian_speed_end_effector_link: 
+max_cartesian_speed: 0
+
+Planning scene: 
+name: pick&place
+robot_state: 
+  joint_state: 
+    header: 
+      seq: 0
+      stamp: 0.000000000
+      frame_id: world
+    name[]
+      name[0]: joint_1
+      name[1]: joint_2
+      name[2]: joint_3
+      name[3]: joint_4
+      name[4]: joint_5
+      name[5]: joint_6
+    position[]
+      position[0]: 0
+      position[1]: 0
+      position[2]: 0
+      position[3]: 0
+      position[4]: 0
+      position[5]: 0
+    velocity[]
+    effort[]
+  multi_dof_joint_state: 
+    header: 
+      seq: 0
+      stamp: 0.000000000
+      frame_id: world
+    joint_names[]
+    transforms[]
+    twist[]
+    wrench[]
+  attached_collision_objects[]
+  is_diff: 0
+robot_model_name: racer5-0-80
+fixed_frame_transforms[]
+  fixed_frame_transforms[0]: 
+    header: 
+      seq: 0
+      stamp: 0.000000000
+      frame_id: world
+    child_frame_id: world
+    transform: 
+      translation: 
+        x: 0
+        y: 0
+        z: 0
+      rotation: 
+        x: 0
+        y: 0
+        z: 0
+        w: 1
+allowed_collision_matrix: 
+  entry_names[]
+    entry_names[0]: base_link
+    entry_names[1]: ee_link
+    entry_names[2]: gripper
+    entry_names[3]: link_1
+    entry_names[4]: link_2
+    entry_names[5]: link_3
+    entry_names[6]: link_4
+    entry_names[7]: link_5
+    entry_names[8]: link_6
+  entry_values[]
+    entry_values[0]: 
+        enabled[]
+        enabled[0]: 0
+        enabled[1]: 0
+        enabled[2]: 0
+        enabled[3]: 1
+        enabled[4]: 0
+        enabled[5]: 1
+        enabled[6]: 0
+        enabled[7]: 1
+        enabled[8]: 1
+    entry_values[1]: 
+        enabled[]
+        enabled[0]: 0
+        enabled[1]: 0
+        enabled[2]: 1
+        enabled[3]: 1
+        enabled[4]: 1
+        enabled[5]: 1
+        enabled[6]: 1
+        enabled[7]: 1
+        enabled[8]: 1
+    entry_values[2]: 
+        enabled[]
+        enabled[0]: 0
+        enabled[1]: 1
+        enabled[2]: 0
+        enabled[3]: 0
+        enabled[4]: 0
+        enabled[5]: 1
+        enabled[6]: 1
+        enabled[7]: 1
+        enabled[8]: 1
+    entry_values[3]: 
+        enabled[]
+        enabled[0]: 1
+        enabled[1]: 1
+        enabled[2]: 0
+        enabled[3]: 0
+        enabled[4]: 1
+        enabled[5]: 1
+        enabled[6]: 1
+        enabled[7]: 1
+        enabled[8]: 1
+    entry_values[4]: 
+        enabled[]
+        enabled[0]: 0
+        enabled[1]: 1
+        enabled[2]: 0
+        enabled[3]: 1
+        enabled[4]: 0
+        enabled[5]: 1
+        enabled[6]: 1
+        enabled[7]: 1
+        enabled[8]: 1
+    entry_values[5]: 
+        enabled[]
+        enabled[0]: 1
+        enabled[1]: 1
+        enabled[2]: 1
+        enabled[3]: 1
+        enabled[4]: 1
+        enabled[5]: 0
+        enabled[6]: 1
+        enabled[7]: 1
+        enabled[8]: 1
+    entry_values[6]: 
+        enabled[]
+        enabled[0]: 0
+        enabled[1]: 1
+        enabled[2]: 1
+        enabled[3]: 1
+        enabled[4]: 1
+        enabled[5]: 1
+        enabled[6]: 0
+        enabled[7]: 1
+        enabled[8]: 1
+    entry_values[7]: 
+        enabled[]
+        enabled[0]: 1
+        enabled[1]: 1
+        enabled[2]: 1
+        enabled[3]: 1
+        enabled[4]: 1
+        enabled[5]: 1
+        enabled[6]: 1
+        enabled[7]: 0
+        enabled[8]: 1
+    entry_values[8]: 
+        enabled[]
+        enabled[0]: 1
+        enabled[1]: 1
+        enabled[2]: 1
+        enabled[3]: 1
+        enabled[4]: 1
+        enabled[5]: 1
+        enabled[6]: 1
+        enabled[7]: 1
+        enabled[8]: 0
+  default_entry_names[]
+  default_entry_values[]
+link_padding[]
+  link_padding[0]: 
+    link_name: base_link
+    padding: 0
+  link_padding[1]: 
+    link_name: ee_link
+    padding: 0
+  link_padding[2]: 
+    link_name: gripper
+    padding: 0
+  link_padding[3]: 
+    link_name: link_1
+    padding: 0
+  link_padding[4]: 
+    link_name: link_2
+    padding: 0
+  link_padding[5]: 
+    link_name: link_3
+    padding: 0
+  link_padding[6]: 
+    link_name: link_4
+    padding: 0
+  link_padding[7]: 
+    link_name: link_5
+    padding: 0
+  link_padding[8]: 
+    link_name: link_6
+    padding: 0
+link_scale[]
+  link_scale[0]: 
+    link_name: base_link
+    scale: 1
+  link_scale[1]: 
+    link_name: ee_link
+    scale: 1
+  link_scale[2]: 
+    link_name: gripper
+    scale: 1
+  link_scale[3]: 
+    link_name: link_1
+    scale: 1
+  link_scale[4]: 
+    link_name: link_2
+    scale: 1
+  link_scale[5]: 
+    link_name: link_3
+    scale: 1
+  link_scale[6]: 
+    link_name: link_4
+    scale: 1
+  link_scale[7]: 
+    link_name: link_5
+    scale: 1
+  link_scale[8]: 
+    link_name: link_6
+    scale: 1
+object_colors[]
+world: 
+  collision_objects[]
+    collision_objects[0]: 
+        header: 
+        seq: 0
+        stamp: 0.000000000
+        frame_id: world
+      pose: 
+        position: 
+          x: 0.84
+          y: 0
+          z: 0.31
+        orientation: 
+          x: 0
+          y: 0
+          z: 0
+          w: 1
+      id: Box_0
+      type: 
+        key: 
+        db: 
+      primitives[]
+        primitives[0]: 
+                type: 1
+          dimensions[]
+            dimensions[0]: 1.1
+            dimensions[1]: 0.05
+            dimensions[2]: 0.5
+      primitive_poses[]
+        primitive_poses[0]: 
+                position: 
+            x: 0
+            y: 0
+            z: 0
+          orientation: 
+            x: 0
+            y: 0
+            z: 0
+            w: 1
+      meshes[]
+      mesh_poses[]
+      planes[]
+      plane_poses[]
+      subframe_names[]
+      subframe_poses[]
+      operation: 0
+    collision_objects[1]: 
+        header: 
+        seq: 0
+        stamp: 0.000000000
+        frame_id: world
+      pose: 
+        position: 
+          x: 0.74
+          y: 0
+          z: 0
+        orientation: 
+          x: 0
+          y: 0
+          z: 0
+          w: 1
+      id: Box_1
+      type: 
+        key: 
+        db: 
+      primitives[]
+        primitives[0]: 
+                type: 1
+          dimensions[]
+            dimensions[0]: 1.2
+            dimensions[1]: 1.65
+            dimensions[2]: 0.2
+      primitive_poses[]
+        primitive_poses[0]: 
+                position: 
+            x: 0
+            y: 0
+            z: 0
+          orientation: 
+            x: 0
+            y: 0
+            z: 0
+            w: 1
+      meshes[]
+      mesh_poses[]
+      planes[]
+      plane_poses[]
+      subframe_names[]
+      subframe_poses[]
+      operation: 0
+  octomap: 
+    header: 
+      seq: 0
+      stamp: 0.000000000
+      frame_id: world
+    origin: 
+      position: 
+        x: 0
+        y: 0
+        z: 0
+      orientation: 
+        x: 0
+        y: 0
+        z: 0
+        w: 0
+    octomap: 
+      header: 
+        seq: 0
+        stamp: 0.000000000
+        frame_id: 
+      binary: 0
+      id: 
+      resolution: 0
+      data[]
+is_diff: 0
+
+|>>>
+0 is the random seed
+10 seconds per run
+-1 MB per run
+10 runs per planner
+629.867 seconds spent to collect the data
+0 enum types
+25 planners
+CHOMP (chomp)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.938096; 
+1.79769e+308; 0; 0.773861; 
+1.79769e+308; 0; 0.912788; 
+1.79769e+308; 0; 0.748978; 
+1.79769e+308; 0; 0.749027; 
+1.79769e+308; 0; 0.780224; 
+1.79769e+308; 0; 0.797573; 
+1.79769e+308; 0; 0.831653; 
+1.79769e+308; 0; 0.728074; 
+1.79769e+308; 0; 0.825775; 
+.
+AnytimePathShortening (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.900948; 
+1.79769e+308; 0; 0.727096; 
+1.79769e+308; 0; 1.02059; 
+1.79769e+308; 0; 0.759284; 
+1.79769e+308; 0; 0.748546; 
+1.79769e+308; 0; 0.79349; 
+1.79769e+308; 0; 0.786056; 
+1.79769e+308; 0; 0.74478; 
+1.79769e+308; 0; 0.73499; 
+1.79769e+308; 0; 0.769595; 
+.
+SBL (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.947645; 
+1.79769e+308; 0; 0.718279; 
+1.79769e+308; 0; 0.805019; 
+1.79769e+308; 0; 0.756686; 
+1.79769e+308; 0; 0.75021; 
+1.79769e+308; 0; 0.770639; 
+1.79769e+308; 0; 0.739706; 
+1.79769e+308; 0; 0.751872; 
+1.79769e+308; 0; 0.797445; 
+1.79769e+308; 0; 0.799323; 
+.
+EST (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 1.02414; 
+1.79769e+308; 0; 0.850437; 
+1.79769e+308; 0; 0.740032; 
+1.79769e+308; 0; 0.738572; 
+1.79769e+308; 0; 0.744963; 
+1.79769e+308; 0; 0.747227; 
+1.79769e+308; 0; 0.781376; 
+1.79769e+308; 0; 0.824255; 
+1.79769e+308; 0; 0.762025; 
+1.79769e+308; 0; 0.905988; 
+.
+LBKPIECE (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.882555; 
+1.79769e+308; 0; 0.826602; 
+1.79769e+308; 0; 0.739555; 
+1.79769e+308; 0; 0.73024; 
+1.79769e+308; 0; 0.762318; 
+1.79769e+308; 0; 0.766983; 
+1.79769e+308; 0; 0.78466; 
+1.79769e+308; 0; 0.805311; 
+1.79769e+308; 0; 0.858344; 
+1.79769e+308; 0; 0.754889; 
+.
+BKPIECE (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 1.0324; 
+1.79769e+308; 0; 0.802686; 
+1.79769e+308; 0; 0.752371; 
+1.79769e+308; 0; 0.751604; 
+1.79769e+308; 0; 0.776677; 
+1.79769e+308; 0; 0.75914; 
+1.79769e+308; 0; 0.774647; 
+1.79769e+308; 0; 0.876118; 
+1.79769e+308; 0; 0.75144; 
+1.79769e+308; 0; 0.751304; 
+.
+KPIECE (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 1.04946; 
+1.79769e+308; 0; 0.737843; 
+1.79769e+308; 0; 0.767718; 
+1.79769e+308; 0; 0.923379; 
+1.79769e+308; 0; 0.748983; 
+1.79769e+308; 0; 1.06323; 
+1.79769e+308; 0; 0.861105; 
+1.79769e+308; 0; 0.793922; 
+1.79769e+308; 0; 0.861009; 
+1.79769e+308; 0; 0.741546; 
+.
+RRT (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 1.12929; 
+1.79769e+308; 0; 0.775555; 
+1.79769e+308; 0; 0.800978; 
+1.79769e+308; 0; 0.863032; 
+1.79769e+308; 0; 0.760678; 
+1.79769e+308; 0; 0.750544; 
+1.79769e+308; 0; 0.747463; 
+1.79769e+308; 0; 0.780214; 
+1.79769e+308; 0; 0.7643; 
+1.79769e+308; 0; 0.823044; 
+.
+RRTConnect (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.878366; 
+1.79769e+308; 0; 0.763563; 
+1.79769e+308; 0; 0.757041; 
+1.79769e+308; 0; 0.748986; 
+1.79769e+308; 0; 0.96578; 
+1.79769e+308; 0; 0.798683; 
+1.79769e+308; 0; 0.743677; 
+1.79769e+308; 0; 0.755953; 
+1.79769e+308; 0; 0.899092; 
+1.79769e+308; 0; 0.740565; 
+.
+RRTstar (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.893486; 
+1.79769e+308; 0; 0.750086; 
+1.79769e+308; 0; 0.832953; 
+1.79769e+308; 0; 0.779108; 
+1.79769e+308; 0; 0.734145; 
+1.79769e+308; 0; 0.770655; 
+1.79769e+308; 0; 0.788142; 
+1.79769e+308; 0; 0.774844; 
+1.79769e+308; 0; 1.2515; 
+1.79769e+308; 0; 1.43036; 
+.
+TRRT (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 1.53385; 
+1.79769e+308; 0; 1.35839; 
+1.79769e+308; 0; 1.36452; 
+1.79769e+308; 0; 1.19474; 
+1.79769e+308; 0; 0.858188; 
+1.79769e+308; 0; 0.826339; 
+1.79769e+308; 0; 0.792397; 
+1.79769e+308; 0; 0.787603; 
+1.79769e+308; 0; 0.796707; 
+1.79769e+308; 0; 0.821671; 
+.
+PRM (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.850668; 
+1.79769e+308; 0; 0.966664; 
+1.79769e+308; 0; 0.740388; 
+1.79769e+308; 0; 0.74426; 
+1.79769e+308; 0; 0.750108; 
+1.79769e+308; 0; 0.743445; 
+1.79769e+308; 0; 0.76123; 
+1.79769e+308; 0; 0.800709; 
+1.79769e+308; 0; 0.764827; 
+1.79769e+308; 0; 0.738668; 
+.
+PRMstar (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 1.55523; 
+1.79769e+308; 0; 1.37875; 
+1.79769e+308; 0; 1.37995; 
+1.79769e+308; 0; 1.37502; 
+1.79769e+308; 0; 1.40066; 
+1.79769e+308; 0; 1.40794; 
+1.79769e+308; 0; 1.40928; 
+1.79769e+308; 0; 1.41274; 
+1.79769e+308; 0; 1.41204; 
+1.79769e+308; 0; 1.4004; 
+.
+FMT (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.865287; 
+1.79769e+308; 0; 0.756578; 
+1.79769e+308; 0; 0.738584; 
+1.79769e+308; 0; 0.773321; 
+1.79769e+308; 0; 0.762224; 
+1.79769e+308; 0; 0.741814; 
+1.79769e+308; 0; 0.731433; 
+1.79769e+308; 0; 0.775539; 
+1.79769e+308; 0; 0.839903; 
+1.79769e+308; 0; 0.895613; 
+.
+BFMT (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.820889; 
+1.79769e+308; 0; 0.650527; 
+1.79769e+308; 0; 0.723742; 
+1.79769e+308; 0; 0.616438; 
+1.79769e+308; 0; 0.61017; 
+1.79769e+308; 0; 0.6183; 
+1.79769e+308; 0; 0.613252; 
+1.79769e+308; 0; 0.618634; 
+1.79769e+308; 0; 0.616977; 
+1.79769e+308; 0; 0.616; 
+.
+PDST (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.778575; 
+1.79769e+308; 0; 0.619781; 
+1.79769e+308; 0; 0.614687; 
+1.79769e+308; 0; 0.607957; 
+1.79769e+308; 0; 0.622139; 
+1.79769e+308; 0; 0.60755; 
+1.79769e+308; 0; 0.617857; 
+1.79769e+308; 0; 0.610385; 
+1.79769e+308; 0; 0.627199; 
+1.79769e+308; 0; 0.616087; 
+.
+STRIDE (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.780244; 
+1.79769e+308; 0; 0.616921; 
+1.79769e+308; 0; 0.612652; 
+1.79769e+308; 0; 0.605876; 
+1.79769e+308; 0; 0.608349; 
+1.79769e+308; 0; 0.604498; 
+1.79769e+308; 0; 0.612518; 
+1.79769e+308; 0; 0.613416; 
+1.79769e+308; 0; 0.614874; 
+1.79769e+308; 0; 0.612438; 
+.
+BiTRRT (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.817866; 
+1.79769e+308; 0; 0.627504; 
+1.79769e+308; 0; 0.614905; 
+1.79769e+308; 0; 0.609045; 
+1.79769e+308; 0; 0.613291; 
+1.79769e+308; 0; 0.608944; 
+1.79769e+308; 0; 0.609889; 
+1.79769e+308; 0; 0.608235; 
+1.79769e+308; 0; 0.620954; 
+1.79769e+308; 0; 0.609694; 
+.
+LBTRRT (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.776602; 
+1.79769e+308; 0; 0.60991; 
+1.79769e+308; 0; 0.609295; 
+1.79769e+308; 0; 0.605116; 
+1.79769e+308; 0; 0.606234; 
+1.79769e+308; 0; 0.610028; 
+1.79769e+308; 0; 0.596663; 
+1.79769e+308; 0; 0.605957; 
+1.79769e+308; 0; 0.611275; 
+1.79769e+308; 0; 0.611708; 
+.
+BiEST (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.764326; 
+1.79769e+308; 0; 0.618372; 
+1.79769e+308; 0; 0.599066; 
+1.79769e+308; 0; 0.61429; 
+1.79769e+308; 0; 0.613752; 
+1.79769e+308; 0; 0.611105; 
+1.79769e+308; 0; 0.609171; 
+1.79769e+308; 0; 0.613323; 
+1.79769e+308; 0; 0.627305; 
+1.79769e+308; 0; 0.609592; 
+.
+ProjEST (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.779878; 
+1.79769e+308; 0; 0.617114; 
+1.79769e+308; 0; 0.614076; 
+1.79769e+308; 0; 0.613927; 
+1.79769e+308; 0; 0.612565; 
+1.79769e+308; 0; 0.626588; 
+1.79769e+308; 0; 0.610168; 
+1.79769e+308; 0; 0.619126; 
+1.79769e+308; 0; 0.632967; 
+1.79769e+308; 0; 0.61771; 
+.
+LazyPRM (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 1.24193; 
+1.79769e+308; 0; 0.788434; 
+1.79769e+308; 0; 0.740725; 
+1.79769e+308; 0; 0.777654; 
+1.79769e+308; 0; 0.747066; 
+1.79769e+308; 0; 0.754654; 
+1.79769e+308; 0; 0.790246; 
+1.79769e+308; 0; 0.692093; 
+1.79769e+308; 0; 0.839845; 
+1.79769e+308; 0; 0.826453; 
+.
+LazyPRMstar (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.83206; 
+1.79769e+308; 0; 0.85728; 
+1.79769e+308; 0; 0.829217; 
+1.79769e+308; 0; 0.746839; 
+1.79769e+308; 0; 0.738445; 
+1.79769e+308; 0; 0.860469; 
+1.79769e+308; 0; 0.869302; 
+1.79769e+308; 0; 0.864552; 
+1.79769e+308; 0; 1.18021; 
+1.79769e+308; 0; 0.724939; 
+.
+SPARS (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.722109; 
+1.79769e+308; 0; 0.616208; 
+1.79769e+308; 0; 0.657354; 
+1.79769e+308; 0; 0.62135; 
+1.79769e+308; 0; 0.600402; 
+1.79769e+308; 0; 0.598185; 
+1.79769e+308; 0; 0.602649; 
+1.79769e+308; 0; 0.603114; 
+1.79769e+308; 0; 0.610714; 
+1.79769e+308; 0; 0.613437; 
+.
+SPARStwo (ompl)
+0 common properties
+3 properties for each run
+average_waypoint_distance REAL
+solved BOOLEAN
+time REAL
+10 runs
+1.79769e+308; 0; 0.717272; 
+1.79769e+308; 0; 0.602128; 
+1.79769e+308; 0; 0.66018; 
+1.79769e+308; 0; 0.612017; 
+1.79769e+308; 0; 0.605275; 
+1.79769e+308; 0; 0.604684; 
+1.79769e+308; 0; 0.60156; 
+1.79769e+308; 0; 0.60739; 
+1.79769e+308; 0; 0.611671; 
+1.79769e+308; 0; 0.604356; 
+.

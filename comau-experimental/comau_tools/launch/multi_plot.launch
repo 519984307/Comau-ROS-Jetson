@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<launch>
+
+
+  <node name="rqt_multiplot_x" 
+        pkg="rqt_multiplot" 
+        type="rqt_multiplot" 
+        output="screen"
+        args = "--multiplot-config $(find comau_tools)/rqt_config/rqt_multiplot_x.xml"/>
+
+  <node name="rqt_multiplot_y" 
+        pkg="rqt_multiplot" 
+        type="rqt_multiplot" 
+        output="screen"
+        args = "--multiplot-config $(find comau_tools)/rqt_config/rqt_multiplot_y.xml"/>
+
+  <node name="rqt_multiplot_z" 
+        pkg="rqt_multiplot" 
+        type="rqt_multiplot" 
+        output="screen"
+        args = "--multiplot-config $(find comau_tools)/rqt_config/rqt_multiplot_z.xml"/>
+
+  <node name="rqt_multiplot_roll" 
+        pkg="rqt_multiplot" 
+        type="rqt_multiplot" 
+        output="screen"
+        args = "--multiplot-config $(find comau_tools)/rqt_config/rqt_multiplot_roll.xml"/>
+  
+  <node name="rqt_multiplot_pitch" 
+        pkg="rqt_multiplot" 
+        type="rqt_multiplot" 
+        output="screen"
+        args = "--multiplot-config $(find comau_tools)/rqt_config/rqt_multiplot_pitch.xml"/>
+
+  <node name="rqt_multiplot_yaw" 
+        pkg="rqt_multiplot" 
+        type="rqt_multiplot" 
+        output="screen"
+        args = "--multiplot-config $(find comau_tools)/rqt_config/rqt_multiplot_yaw.xml"/>
+
+
+</launch>

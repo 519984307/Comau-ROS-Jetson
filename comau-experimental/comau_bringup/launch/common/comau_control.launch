@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!--available controllers-->
+
+  <!--joint_state_controller  -->
+  <!-- pos_joint_traj_controller-->
+  <!--sensor_tracking_controller-->
+  
+  <arg name="controllers" 
+       doc="Controllers that are activated by default."
+       default="joint_state_controller"/>
+       
+
+  <rosparam file="$(find comau_driver)/config/controllers.yaml" command="load"/>
+
+  <!-- Launch HW interface node for ROS JointState controller -->
+  <node name="comau_hardware_interface" 
+        pkg="comau_driver" 
+        type="comau_hardware_interface_node" 
+        output="screen"/>
+
+  <!-- Launch controller manager Spawner-->
+  <node name="controller_spawner" pkg="controller_manager" 
+        type="spawner" 
+        respawn="false" output="screen" 
+        args="$(arg controllers)"/>
+
+  <!-- load other controllers -->
+  <node name="controller_loader" pkg="controller_manager" 
+        type="controller_manager" 
+        respawn="false" output="screen" 
+        args="load sensor_tracking_controller " />
+
+</launch>

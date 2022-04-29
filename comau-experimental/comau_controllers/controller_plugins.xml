@@ -1,0 +1,12 @@
+<library path="lib/libcomau_controllers">
+
+  <class name="comau_controllers/SensorTrackingController" 
+         type="comau_controllers::SensorTrackingController" 
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+        This controller accepts as command a twist end effector velocity and writes the relative cartesian position
+    </description>
+    
+  </class>
+
+</library>

@@ -1,0 +1,10 @@
+# The name of this file shouldn't be changed, or else the Setup Assistant won't detect it
+sensors:
+  - sensor_plugin: occupancy_map_monitor/PointCloudOctomapUpdater
+    point_cloud_topic: /cloud                          # This specifies the topic to listen on for a point cloud.
+    max_range: 2.0                                     # (in m) Points further than this will not be used.
+    point_subsample: 1                                 # Choose one of every point_subsample points.
+    padding_offset: 0.01                               # Should always be >= 1.0. Scale up collision shapes in the scene before excluding them from the octomap.
+    padding_scale: 1.0                                 # Absolute padding (in m) around scaled collision shapes when excluding them from the octomap.
+    max_update_rate: 1                               # The octomap representation will be updated at rate less than or equal to this value.
+    filtered_cloud_topic: filtered_cloud               # The topic on which the filtered cloud will be published (mainly for debugging). The filtering cloud is the resultant cloud after self-filtering has been performed.

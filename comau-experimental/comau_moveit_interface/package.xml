@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>comau_moveit_interface</name>
+  <version>0.1.0</version>
+  <description>The comau_moveit_interface package</description>
+
+  <maintainer email="lms@lms.mech.upatras.gr">LMS</maintainer>
+
+  <license>BSD</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+ 
+
+
+  <export>
+
+  </export>
+</package>

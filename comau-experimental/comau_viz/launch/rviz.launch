@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+
+    <arg name="config" default="moveit"/> 
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find comau_viz)/rviz/$(arg config).rviz" />
+
+</launch>

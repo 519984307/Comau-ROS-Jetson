@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="ns" default="/" />
+  <group ns="$(arg ns)">
+    <arg name="robot_description_file" default="$(find aura_description)/launch/aura_upload.launch" doc="Robot description launch file."/>
+    <arg name="robot_net_config_file" default="roboshop_net_config"  doc="Network configuration for Roboshop simulation program" />
+    <!-- <arg name="robot_joint_limits_file" default="aura_joint_limits" doc="Joint limits for AURA" />  -->
+    
+    <!--use mimic parameter-->
+    <arg name="use_mimic" default="true" doc="Loads urdf with mimic joint if true" />
+    
+    <include file="$(find comau_driver)/launch/comau_common.launch">
+      <arg name="robot_description_file" value="$(arg robot_description_file)"/>
+      <arg name="robot_net_config_file" value="$(arg robot_net_config_file)"/>
+      <arg name="use_mimic" value="$(arg use_mimic)"/>
+      <!-- <arg name="robot_joint_limits_file" value="$(arg robot_joint_limits_file)"/> -->
+    </include>
+  </group>
+</launch>

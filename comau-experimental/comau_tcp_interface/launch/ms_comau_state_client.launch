@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<launch>
+  <node name="comau_state_client_node" pkg="comau_tcp_interface" type="comau_state_client_node" output="screen">
+    <rosparam file="$(find comau_tcp_interface)/config/racer7_net_config.yaml"/>
+  </node>
+</launch>

@@ -1,0 +1,29 @@
+# This is an example configuration that loads the "Kitchen" scene from the
+# local MoveIt warehouse and benchmarks the "panda_arm" group in the Pick1
+# query using the Start1 initial state (all pre-stored in the local warehouse)
+
+# Three different planners from OMPL are run a total of 50 times each, with a
+# maximum of 10 seconds per run.  Output is stored in the /tmp/moveit_benchmarks directory.
+
+benchmark_config:
+    warehouse:
+        host: localhost
+        port: 33829
+        scene_name: pick&place     # Required
+    parameters:
+        name: pick&place
+        runs: 10
+        group: arm       # Required
+        timeout: 10.0
+        output_directory: /home/antonio/catkin_ws/src/comau-experimental/comau_benchmark/log
+        queries: Pick
+        start_states: Start
+        # path_constraints:       #[Regex for the path constraints to benchmark]              # Default ""
+        # queries:                #[Regex for the motion plan queries in the warehouse to try]         # Default .*
+        # goal_constraints:       #[Regex for the goal constraints to benchmark]              # Default ""
+        # trajectory_constraints: #[Regex for the trajectory constraints to benchmark]  # Default ""
+
+    
+        - name: stomp
+          planners:
+            - STOMP

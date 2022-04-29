@@ -1,0 +1,284 @@
+PROGRAM motion_handler HOLD, &PA, PROG_ARM=1, PRIORITY=4
+  ---------------------------------------------------------------
+  --- Author: LMS                                               
+  --- Brief: Robot motion handler for executing motion commands 
+  --- which are received from motion server
+  ---------------------------------------------------------------
+
+TYPE
+---------------------------------------------------------------
+--- Node: JOINT_NODE
+--- Brief: Structure for describing an joint value . 
+---------------------------------------------------------------
+  JOINT_NODE = NODEDEF
+    $MAIN_JNTP
+    $LIN_SPD
+  ENDNODEDEF
+---------------------------------------------------------------
+--- Node: POSE_NODE
+--- Brief: Structure for describing an pose value . 
+---------------------------------------------------------------
+  POSE_NODE = NODEDEF
+    $MAIN_POS
+    $LIN_SPD
+  ENDNODEDEF
+
+CONST
+  cs_main_log = '[MOTION_HANDLER] '     -- Name for main loop used in LUN_CRT 
+  ci_verbose = 1                        -- Level of logging
+  ci_receive_frequency = 100             -- The loop frequency in Hz of main server.
+
+VAR
+  -- Shared variables
+  ss_state: STRING[1] EXPORTED FROM motion_server
+  ss_motion_type: STRING[1] EXPORTED FROM motion_server
+  shutdown: BOOLEAN EXPORTED FROM motion_server
+
+  sp_joint_trajectory: PATH of JOINT_NODE EXPORTED FROM motion_server   -- Shared variable for the joint trajectory that will be executed 
+  sp_cartesian_trajectory: PATH of POSE_NODE EXPORTED FROM motion_server   -- Shared variable for the pose trajectory that will be executed  
+  sar_cartesian_correction : ARRAY[6] OF REAL EXPORTED FROM motion_server
+  sar_ofst : ARRAY[6] OF REAL
+  
+  sb_enable_robot : BOOLEAN EXPORTED FROM motion_server
+  sb_reset_motion : BOOLEAN EXPORTED FROM motion_server 
+  sb_terminate : BOOLEAN EXPORTED FROM motion_server 
+  first_snstrk : BOOLEAN EXPORTED FROM motion_server
+  sem_exec : SEMAPHORE EXPORTED FROM motion_server NOSAVE          
+
+  -- Global variables
+  vs_screen_lun : INTEGER                             -- Output screen identifier
+  vb_first_sns_trk : BOOLEAN
+  t_i : INTEGER
+	
+	vi_i     : INTEGER
+
+  -- Declaration of shared functions 
+ROUTINE throw_error(error_msg : STRING) EXPORTED FROM motion_server
+ROUTINE print_joint_trajectory(trajectory: PATH of JOINT_NODE) EXPORTED FROM motion_server
+ROUTINE print_cartesian_trajectory(trajectory: PATH of POSE_NODE) EXPORTED FROM motion_server
+ROUTINE clear_joint_trajectory EXPORTED FROM motion_server
+ROUTINE clear_cartesian_trajectory EXPORTED FROM motion_server
+
+  ---------------------------------------------------------------
+  --- Routine: set_succeeded_state
+  --- Brief: Sets shared variable tha keeping the robot's state to 
+  --- SUCCEEDED
+  ---------------------------------------------------------------
+ROUTINE set_succeeded_state
+BEGIN
+  IF ss_state = 'M' THEN
+    ss_state := 'S' -- Succeeded state
+    sb_enable_robot := FALSE
+    LOCK
+    CANCEL ALL
+    UNLOCK
+    RESUME
+    clear_joint_trajectory
+    clear_cartesian_trajectory
+    $SENSOR_ENBL := FALSE
+    DELAY 50
+    ss_state := 'R'   -- Turns again to ready 
+    WRITE vs_screen_lun (cs_main_log, 'Robot motion succeeded ready to receive new command.', NL)
+  ENDIF
+END set_succeeded_state
+
+  --------------------------------------------------------------------
+  --- Routine: reset_motion
+  --- Brief: Cancels the existing motion and resets
+  --------------------------------------------------------------------
+ROUTINE reset_motion
+BEGIN
+  WRITE vs_screen_lun (cs_main_log, 'Cancel current executed motion', NL)
+  ss_state := 'C' -- CANCELING state
+  sb_enable_robot := FALSE
+  first_snstrk := TRUE
+  ss_motion_type := 'R'
+  CANCEL sem_exec
+  SIGNAL sem_exec
+  LOCK
+  CANCEL ALL
+  UNLOCK
+  RESUME
+  clear_joint_trajectory
+  clear_cartesian_trajectory
+  FOR t_i :=1 TO 6 DO
+    sar_cartesian_correction[t_i] := 0
+  ENDFOR
+  $SENSOR_ENBL := FALSE
+  SENSOR_TRK(FALSE, 1)
+  $SENSOR_TYPE := 0 
+  vb_first_sns_trk := TRUE
+  DELAY 50
+  ss_state := 'R'  -- Turns again to ready
+  CANCEL sem_exec
+  SIGNAL sem_exec
+  first_snstrk := TRUE
+  sb_enable_robot := FALSE
+  sb_reset_motion := FALSE
+END reset_motion
+
+  --------------------------------------------------------------------
+  --- Routine: reset_motion
+  --- Brief: Cancels the existing motion and resets
+  --------------------------------------------------------------------
+ROUTINE terminate
+BEGIN
+  WRITE vs_screen_lun (cs_main_log, 'Cancel current executed motion', NL)
+  ss_state := 'C' -- CANCELING state
+  sb_enable_robot := FALSE
+  LOCK
+  CANCEL ALL
+  UNLOCK
+  RESUME
+  clear_joint_trajectory
+  clear_cartesian_trajectory
+  $SENSOR_ENBL := FALSE
+  DELAY 50
+  ss_state := 'T' -- Terminate state
+END terminate
+
+  ------------------
+  ---- MAIN LOOP 
+  ------------------
+BEGIN 
+  vs_screen_lun := LUN_CRT      -- define output 
+	
+
+  -- Condition for stopping -> resetting the executed motion
+  CONDITION[1]:
+    WHEN sb_reset_motion=TRUE DO
+      reset_motion
+  ENDCONDITION
+
+  ENABLE CONDITION[1]
+
+  -- Condition for terminating the program
+  CONDITION[2]:
+    WHEN sb_terminate=TRUE DO
+      terminate
+  ENDCONDITION
+  ENABLE CONDITION[2]
+  
+  clear_joint_trajectory
+  clear_cartesian_trajectory
+  
+  sb_reset_motion := FALSE
+  sb_terminate := FALSE
+  sb_enable_robot := FALSE
+  
+  $SENSOR_TYPE := 0   --External sensor in relative mode and TOOL reference
+  vb_first_sns_trk := TRUE
+  FOR t_i :=1 TO 6 DO
+    $SENSOR_CNVRSN[t_i] := 1
+    $SENSOR_GAIN[t_i]   := 100
+    sar_cartesian_correction[t_i] := 0
+  ENDFOR
+  $SENSOR_TIME := 0            -- Deviation distribution in time
+  $SENSOR_OFST_LIM[1] := 500   -- Translation maximum limit
+  $SENSOR_OFST_LIM[2] := 800   -- Rotation maximum limit
+  $SENSOR_ENBL := FALSE
+  SENSOR_TRK(FALSE, 1)
+
+
+  $TURN_CARE := TRUE -- Check the configuration turns
+
+  LOCK
+  CANCEL ALL
+  UNLOCK
+  RESUME
+
+  IF VAR_UNINIT(shutdown) THEN
+    WRITE LUN_CRT (cs_main_log, 'Initialize shutdown to FALSE', NL)
+    shutdown := FALSE -- FALSE
+  ENDIF
+
+  WHILE TRUE DO
+
+    -- Wait until robot new motion command received
+    
+    WHILE (ss_state <> 'M') DO
+      DELAY ROUND((1 / ci_receive_frequency ) * 1000)
+    ENDWHILE -- Wait for motion command loop
+    WHILE (sb_enable_robot = FALSE) DO
+      DELAY ROUND((1 / ci_receive_frequency ) * 1000)
+    ENDWHILE -- Wait for motion command loop
+
+    SELECT ss_motion_type OF  
+      CASE ('J'):
+        $SENSOR_ENBL := FALSE
+        IF PATH_LEN(sp_joint_trajectory) > 0 THEN
+          WRITE vs_screen_lun (cs_main_log, 'Joint Trajectory command will execute', NL)
+          print_joint_trajectory(sp_joint_trajectory)
+        
+          MOVE ALONG sp_joint_trajectory,
+            -- WITH $SEG_FLY = TRUE
+            -- WITH $LIN_SPD=sp_joint_trajectory.NODE[1].$LIN_SPD, $SPD_EMT=SPD_LIN
+          ENDMOVE
+          set_succeeded_state
+        ENDIF
+      CASE ('C'):
+        $SENSOR_ENBL := FALSE
+        IF PATH_LEN(sp_cartesian_trajectory) > 0 THEN
+          WRITE vs_screen_lun (cs_main_log, 'Cartesian Trajectory command will execute', NL)
+          print_cartesian_trajectory(sp_cartesian_trajectory)
+          MOVE ALONG sp_cartesian_trajectory,
+            -- WITH $SEG_FLY = TRUE
+            -- WITH $LIN_SPD=sp_joint_trajectory.NODE[1].$LIN_SPD, $SPD_EMT=SPD_LIN
+          ENDMOVE
+          set_succeeded_state
+        ENDIF
+      CASE ('S'):
+        --WAIT sem_exec
+        IF vb_first_sns_trk = TRUE THEN
+					--
+					-- 0:  Sensor suspended
+					-- 1..4: Reserved
+					-- 5:  External sensor in TOOL frame,   relative mode
+					-- 6:  External sensor in UFRAME frame, relative mode
+					-- 7:  External sensor in WORLD frame,  relative mode
+					-- 8:  External sensor in WEAVE frame,  relative mode
+					-- 9:  External sensor in TOOL frame,   absolute mode
+					-- 10: External sensor in UFRAME frame, absolute mode
+					-- 11: External sensor in WORLD frame,  absolute mode
+					-- 12: External sensor in WEAVE frame,  absolute mode
+					--
+					--
+          SENSOR_TRK(TRUE, 1)
+          $SENSOR_TYPE := 10 --6 for the relative mode or 10 for the absolute one
+          $SENSOR_ENBL := TRUE
+					$SENSOR_CNVRSN[1] := 1   -- [bit/mm]
+					$SENSOR_CNVRSN[2] := 1   -- [bit/mm]
+					$SENSOR_CNVRSN[3] := 1   -- [bit/mm]
+					$SENSOR_CNVRSN[4] := 1   -- [bit/deg]
+					$SENSOR_CNVRSN[5] := 1   -- [bit/deg]
+					$SENSOR_CNVRSN[6] := 1   -- [bit/deg]
+						--
+					$SENSOR_GAIN[1] := 100   -- fattore di guadagno X [percentuale]
+					$SENSOR_GAIN[2] := 100   -- fattore di guadagno Y [percentuale]
+					$SENSOR_GAIN[3] := 100   -- fattore di guadagno Z [percentuale]
+					$SENSOR_GAIN[4] := 100
+					$SENSOR_GAIN[5] := 100
+					$SENSOR_GAIN[6] := 100
+          --
+          $SENSOR_OFST_LIM[1] := 500  -- max linear translation limit [mm]
+          $SENSOR_OFST_LIM[2] := 800   -- max rotaion [deg]
+          vb_first_sns_trk := FALSE
+        ENDIF
+		
+		
+				
+       --SENSOR_SET_DATA(sar_cartesian_correction, 1)
+        --SENSOR_GET_OFST(sar_ofst, 1)
+        --SIGNAL sem_exec
+      CASE ('R'):
+        WRITE vs_screen_lun (cs_main_log, 'Weird semaphor', NL)
+        reset_motion
+      ELSE:
+        WRITE vs_screen_lun (cs_main_log, 'Weird semaphor', NL)
+        reset_motion
+    ENDSELECT
+    DELAY 1
+  ENDWHILE -- Main loop
+
+  DELAY 1000
+END motion_handler

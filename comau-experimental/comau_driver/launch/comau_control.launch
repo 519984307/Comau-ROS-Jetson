@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+  
+  <arg name="controllers" default="joint_state_controller" doc="Controllers that are activated by default."/>
+
+  <!-- <rosparam file="$(find comau_driver)/config/hardware.yaml" command="load"/> -->
+  <rosparam file="$(find comau_driver)/config/controllers.yaml" command="load"/>
+
+  <!-- Launch HW interface node for ROS JointState controller -->
+  <node name="comau_hardware_interface" pkg="comau_driver" type="comau_hardware_interface_node" output="screen"/>
+
+  <!-- Launch controller manager-->
+  <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false" output="screen" args="$(arg controllers)"/>
+
+</launch>

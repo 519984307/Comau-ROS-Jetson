@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>comau_tools</name>
+  <version>0.0.0</version>
+  <description>The comau_tools package</description>
+
+  <maintainer email="lms@lms.mech.upatras.gr">lms</maintainer>
+  <license>BSD</license>
+
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>dynamic_reconfigure</depend>
+  <depend>roscpp</depend>
+  <depend>tf2_ros</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  
+  
+  <export>
+  </export>
+</package>

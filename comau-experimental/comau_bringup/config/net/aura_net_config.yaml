@@ -1,0 +1,5 @@
+#Parameters for connecting with real robot default IP
+comau_driver:
+  robot_ip: "192.168.29.2"  # this the the IP of the Robot
+  state_server_port: "1104"   # the port of TCP state server
+  motion_server_port: "1105"    # the port of TCP motion server

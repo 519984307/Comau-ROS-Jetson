@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="robot_description_file" doc="Robot description launch file."/>
+  <arg name="tf_prefix" default="" doc="tf_prefix used for the robot."/>
+  <arg name="robot_net_config_file" default="roboshop_net_config"  doc="Network configuration for Roboshop simulation program" />
+  <arg name="use_mimic" default="false" doc="Loads urdf with mimic joint if true" />
+  
+  <!--Load net config parameters-->
+  <rosparam file="$(find comau_bringup)/config/net/$(arg robot_net_config_file).yaml" command="load"/>
+
+  <group if="$(arg use_mimic)">
+    <include file="$(arg robot_description_file)">
+      <arg name="use_mimic" value="$(arg use_mimic)"/>
+    </include>
+  </group>
+
+  <group unless="$(arg use_mimic)">
+    <include file="$(arg robot_description_file)"/>
+  </group>
+
+  <!-- Robot state publisher -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"/>
+
+  <include file="$(find comau_bringup)/launch/common/comau_control.launch"/>
+
+</launch>

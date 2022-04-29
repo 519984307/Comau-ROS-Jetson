@@ -1,0 +1,11 @@
+bool add
+string object_id
+
+bool use_mesh
+string object_mesh_path
+geometry_msgs/Pose object_pose
+
+bool use_primitive
+shape_msgs/SolidPrimitive object_primitive
+---
+bool success

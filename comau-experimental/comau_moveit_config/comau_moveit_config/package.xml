@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>comau_moveit_config</name>
+  <version>0.1.0</version>
+  <description>Metapackage of all robot description package </description>
+
+  <maintainer email="lms@lms.mech.upatras.gr">LMS</maintainer>
+
+  <license>BSD</license>
+ 
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- <exec_depend>aura_moveit_config</exec_depend>
+  <exec_depend>nj4-110_moveit_config</exec_depend>
+  <exec_depend>nj220_moveit_config</exec_depend> -->
+  <exec_depend>racer5-0-80_moveit_config</exec_depend>
+  <!-- <exec_depend>racer5-cobot_moveit_config</exec_depend>
+  <exec_depend>racer7-14_moveit_config</exec_depend> -->
+
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <metapackage />
+  </export>
+</package>

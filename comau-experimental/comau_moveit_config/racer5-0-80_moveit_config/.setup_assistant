@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: racer5-0-80_description
+    relative_path: robots/racer5-0-80_robot.urdf.xacro
+    xacro_args: ""
+  SRDF:
+    relative_path: /config/racer5-0-80.srdf
+  CONFIG:
+    author_name: antonio
+    author_email: venezia.antonio.w@gmail.com
+    generated_timestamp: 1634117376

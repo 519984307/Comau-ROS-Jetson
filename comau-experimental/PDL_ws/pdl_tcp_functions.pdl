@@ -1,0 +1,93 @@
+PROGRAM pdl_tcp_functions NOHOLD
+
+-----------------------------------------------------------------
+--- Author: LMS                                                 
+--- Brief: Useful functions for TCP/IP socket handling in PDL  
+-----------------------------------------------------------------
+
+CONST
+  ci_dv_tcp_get = 27                    -- DV_CNTRL code for getting connection info
+  ci_dv_tcp_accept = 29                 -- DV_CNTRL code for port to socket connection
+  ci_dv_tcp_connect = 30                -- DV_CNTRL code to activate TCP connection (TCP go UP)
+  ci_dv_tcp_disconnect = 31             -- DV_CNTRL code to deactivate TCP connection (TCP go DOWN)
+
+-- Declaration of shared functions 
+ROUTINE print_connection_info(netlun, screenlun, verbose: INTEGER; log_tag: STRING) EXPORTED FROM pdl_tcp_functions GLOBAL
+ROUTINE tcp_server_accept(netlun, port, screenlun, verbose: INTEGER; log_tag: STRING) EXPORTED FROM pdl_tcp_functions GLOBAL
+ROUTINE tcp_server_disconnect(netlun, screenlun, verbose: INTEGER; log_tag: STRING) EXPORTED FROM pdl_tcp_functions GLOBAL
+
+---------------------------------------------------------------
+--- Routine: print_connection_info
+--- Brief: Print info of the incoming connections
+---------------------------------------------------------------
+-- Parameters:
+--    netlun:     The " socket file" corresponding to the network
+--                resource
+--    screenlun:  The identifier for the output screen 
+--                If -1, the outputs will be written in the TP
+--    verbose:    if 1, a lot of stuff will be written at screen
+---------------------------------------------------------------
+ROUTINE print_connection_info(netlun, screenlun, verbose: INTEGER; log_tag: STRING)
+VAR 
+  ls_session, ls_accept, ls_connect : STRING[40]
+  li_remote, li_local, li_options, li_linger : INTEGER
+BEGIN
+  DV_CNTRL(ci_dv_tcp_get, (netlun), ls_session, ls_accept, ls_connect, li_remote, li_local, li_options, li_linger)
+  IF $DV_STS = 0 THEN
+    IF verbose = 1 THEN
+      WRITE screenlun (log_tag,'Session:', ls_session, ' Accept:', ls_accept, NL )
+      WRITE screenlun (log_tag,'Connect:', ls_connect, ' Remote Port:', li_remote, ' Local:', li_local, NL )
+    ENDIF
+  ENDIF
+END print_connection_info
+
+
+----------------------------------------------------------------------------
+--- Routine: tcp_server_accept                                               
+--- Brief: Creates a tcp_server that accepts connections on the given port 
+----------------------------------------------------------------------------
+-- Parameters:
+--    netlun:     The " socket file" corresponding to the network resource
+--    port:       Port of the remote server
+--    screenlun:  The identifier for the output screen 
+--                If -1, the outputs will be written in the TP
+--    verbose:    if 1, a lot of stuff will be written at screen
+--------------------------------------------------------------------------
+ROUTINE tcp_server_accept(netlun, port, screenlun, verbose: INTEGER; log_tag: STRING)
+BEGIN
+
+  DV_CNTRL(ci_dv_tcp_accept, (netlun), (port), '0.0.0.0')
+  
+  IF $DV_STS = 0 THEN
+    print_connection_info((netlun), (screenlun), verbose, (log_tag))
+    IF verbose = 1 THEN 
+      WRITE screenlun (log_tag, 'Connected!', NL)
+    ENDIF
+  ELSE
+    WRITE screenlun (log_tag, ' Error! $DV_STS=', $DV_STS , NL)
+  ENDIF
+
+END tcp_server_accept 
+
+-----------------------------------------------------------------
+--- Routine: tcp_server                                         
+--- Brief: Disconnects the server at the given socket            
+-----------------------------------------------------------------
+-- Parameters:
+--    netlun:     The " socket file" corresponding to the network
+--                resource
+--    screenlun:  The identifier for the output screen 
+--                If -1, the outputs will be written in the TP
+--    verbose:    if 1, a lot of stuff will be written at screen
+---------------------------------------------------------------
+ROUTINE tcp_server_disconnect(netlun, screenlun, verbose: INTEGER; log_tag: STRING)
+BEGIN
+
+  DV_CNTRL(ci_dv_tcp_disconnect, (netlun))
+  DELAY 1000
+  
+END tcp_server_disconnect
+
+BEGIN
+
+END pdl_tcp_functions

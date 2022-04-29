@@ -1,0 +1,6 @@
+#Parameters for connecting with virtual robot at Roboshop
+comau_driver:
+  #robot_ip: "192.168.56.2" #"172.22.162.101"  # this the the IP of the Robot
+  robot_ip: "172.22.43.111"
+  state_server_port: "1104"   # the port of TCP state server
+  motion_server_port: "1105"    # the port of TCP motion server

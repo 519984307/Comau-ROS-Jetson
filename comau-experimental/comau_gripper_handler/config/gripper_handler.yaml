@@ -1,0 +1,5 @@
+comau_gripper_handler:
+  robot_ip: "192.168.43.3"  # this the the IP of the Robot
+  #state_server_port: "1104"   # the port of TCP state server
+  #robot_server_port: "1105"    # the port of TCP robot/executor server
+  gripper_server_port: "1102" # the port of TCP for Arm1 server
